@@ -1,2 +1,5 @@
-# Portable-Network-Archive
-Portable Network Archive (PNA) is a highly scalable archive format based on the PNG data structure with compression, splitting, and encryption.
+# PNA (Portable Network Archive) Specification
+
+Specification is hosted on GitHub Pages.
+
+See [Specification](https://portable-network-archive.github.io/Portable-Network-Archive-Specification/)
