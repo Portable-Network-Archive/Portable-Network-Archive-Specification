@@ -11,3 +11,7 @@ This document describes PNA (Portable Network Archive), an extensible file forma
 PNA is robust, providing both full file integrity checking and simple detection of common transmission errors.
 
 This specification defines the Internet Media Type "application/pna".
+
+## Table of Contents
+
+- [1. Introduction](./introduction/index.md)
