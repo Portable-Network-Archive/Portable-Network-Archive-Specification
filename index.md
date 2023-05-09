@@ -15,3 +15,7 @@ This specification defines the Internet Media Type "application/pna".
 ## Table of Contents
 
 - [1. Introduction](./introduction/index.md)
+- [2. Data Representation](./data_representation/index.md#2-data-representation)
+  - [2.1 Archive layout](./data_representation/index.md#21-archive-layout)
+  - [2.2. Integers and byte order](./data_representation/index.md#22-integers-and-byte-order)
+  - [2.3 Text encodings](./data_representation/index.md#23-text-encodings)
