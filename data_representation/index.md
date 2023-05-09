@@ -9,8 +9,8 @@ There are multiple types of entries, including files and directories.
 
 Three types of archive are supported:
 - An archive in which one entry consists of one file or directory and corresponding entries
-- An archive consisting of an entry that is a collection of multiple entries.
-- Archives that mix the above two
+- An archive consisting of an entry that is a collection of multiple entries
+- Archives that combine the above two types, allowing for a mix of individual entries and collections within the same archive
 
 Optionally, PNA archive can be split.
 Splitting is allowed across entries.
