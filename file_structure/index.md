@@ -30,14 +30,16 @@ Decoders are required to select the appropriate algorithm based on this informat
 
 **Ancillary:**
 
-Ancillary information such as the date and time of creation of the entry, the date and time of update, ownership and permissions information.
-These are not mandatory information for the entry.
+Ancillary information such as the creation and update datetime, ownership, permissions and others.
+These are not required for the entry.
 
 **Data:**
 
 Actual data of the entry.
+The data is allowed to be split into multiple chunks.
+By splitting the data into smaller chunks can help to detect file corruption more quickly.
 Depending on the type of entry, this data is also allowed to be empty.
-About the types of entries are in the next chapter.
+About the types of entry are in the next chapter.
 
 **Tailer:**
 
@@ -45,12 +47,9 @@ End of entry marker.
 The point where this chunk appears is the end point of a single entry.
 It is permitted to start the next entry following this entry or to continue with a chunk indicating the end of the archive.
 
-They consist of chunks and the data part is allowed to be split into multiple chunks.
-By splitting the data part chunks into smaller chunks, file corruption can be detected more quickly.
-
 ### 3.3 Entry kind
 
-The following types of entries are currently supported.
+The following types of entry are currently supported.
 
 **Regular file**
 
@@ -62,9 +61,9 @@ The following types of entries are currently supported.
 
 ### 3.4 Special entry
 
-As a special entry, a solid mode-only entry is supported, which is a chunk of the above entries.
-This entry is similar to a normal entry, but the data part records the concatenated data of the normal entry instead of the actual data of the entry.
-The chunks that make up the entry also have a dedicated chunk for solid mode.
+A special entry is supported, a solid-mode-only entry that holds data that concatenated the above entries.
+This entry is similar to a normal entries, but the data part records the data of concatenated the normal entry instead of the actual data of the entry.
+The chunks that make up this special entry have chunks dedicated to solid mode.
 
 ### 3.5 Chunk layout
 
