@@ -149,4 +149,4 @@ x^32+x^26+x^23+x^22+x^16+x^12+x^11+x^10+x^8+x^7+x^5+x^4+x^2+x+1
 
 The 32-bit CRC register is initialized to all 1's, and then the data from each byte is processed from the least significant bit (1) to the most significant bit (128). After all the data bytes are processed, the CRC register is inverted (its ones complement is taken). This value is transmitted (stored in the file) MSB first. For the purpose of separating into bytes and ordering, the least significant bit of the 32-bit CRC is defined to be the coefficient of the x31 term.
 
-Practical calculation of the CRC always employs a precalculated table to greatly accelerate the computation. See Sample CRC Code.
+Practical calculation of the CRC always employs a precalculated table to greatly accelerate the computation.
