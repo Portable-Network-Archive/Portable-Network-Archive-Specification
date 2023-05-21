@@ -109,7 +109,7 @@ Chunks that are necessary for successful extract of the file's contents are call
 **Private bit: bit 5 of second byte**
 
 0 (uppercase) = public, 1 (lowercase) = private.
-A public chunk is one that is part of the PNA specification or is registered in the list of PNA special-purpose public chunk types. Applications can also define private (unregistered) chunks for their own purposes. The names of private chunks must have a lowercase second letter, while public chunks will always be assigned names with uppercase second letters. Note that decoders do not need to test the private-chunk property bit, since it has no functional significance; it is simply an administrative convenience to ensure that public and private chunk names will not conflict. See Additional chunk types, and Recommendations for Encoders: Use of private chunks.
+A public chunk is one that is part of the PNA specification or is registered in the list of PNA special-purpose public chunk types. Applications can also define private (unregistered) chunks for their own purposes. The names of private chunks must have a lowercase second letter, while public chunks will always be assigned names with uppercase second letters. Note that decoders do not need to test the private-chunk property bit, since it has no functional significance; it is simply an administrative convenience to ensure that public and private chunk names will not conflict. See [Additional chunk types](../chunk_specifications/index.md#44-additional-chunk-types), and Recommendations for Encoders: [Use of private chunks]().
 
 **Reserved bit: bit 5 of third byte**
 
