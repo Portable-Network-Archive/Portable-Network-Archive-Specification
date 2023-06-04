@@ -1,5 +1,13 @@
 ## References
 
+### **[RFC-1950]**
+Deutsch, P. and J-L. Gailly, "ZLIB Compressed Data Format Specification version 3.3", RFC 1950, Aladdin Enterprises, May 1996.
+[ftp://ftp.isi.edu/in-notes/rfc1950.txt](ftp://ftp.isi.edu/in-notes/rfc1950.txt)
+
+### **[RFC-1951]**
+Deutsch, P., "DEFLATE Compressed Data Format Specification version 1.3", RFC 1951, Aladdin Enterprises, May 1996.
+[ftp://ftp.isi.edu/in-notes/rfc1951.txt](ftp://ftp.isi.edu/in-notes/rfc1951.txt)
+
 ### **[RFC-2119]**
 
 Bradner, Scott, "Key words for use in RFCs to Indicate Requirement Levels", RFC 2119, Harvard University, March 1997.
