@@ -2,7 +2,7 @@
 
 ### 5.1. Deflate
 
-PNA compression method (the only compression method presently defined for PNA) specifies deflate/inflate compression with a sliding window of at most 32768 bytes. Deflate compression is an LZ77 derivative used in zip, gzip, pkzip, and related programs. Extensive research has been done supporting its patent-free status. Portable C implementations are freely available.
+PNA compression method 0 specifies deflate/inflate compression with a sliding window of at most 32768 bytes. Deflate compression is an LZ77 derivative used in zip, gzip, pkzip, and related programs. Extensive research has been done supporting its patent-free status. Portable C implementations are freely available.
 
 Deflate-compressed datastreams within PNA are stored in the "zlib" format, which has the structure:
 
@@ -12,7 +12,7 @@ Deflate-compressed datastreams within PNA are stored in the "zlib" format, which
    Check value:                   4 bytes
 Further details on this format are given in the zlib specification [RFC-1950](../references/index.md#rfc-1950).
 
-For PNA compression method deflate, the zlib compression method/flags code must specify method code 0 ("deflate" compression) and an LZ77 window size of not more than 32768 bytes. Note that the zlib compression method number is not the same as the PNA compression method number. The additional flags must not specify a preset dictionary. A PNA decoder must be able to decompress any valid zlib datastream that satisfies these additional constraints.
+For PNA compression method 0, the zlib compression method/flags code must specify method code 0 ("deflate" compression) and an LZ77 window size of not more than 32768 bytes. Note that the zlib compression method number is not the same as the PNA compression method number. The additional flags must not specify a preset dictionary. A PNA decoder must be able to decompress any valid zlib datastream that satisfies these additional constraints.
 
 If the data to be compressed contains 16384 bytes or fewer, the encoder can set the window size by rounding up to a power of 2 (256 minimum). This decreases the memory required not only for encoding but also for decoding, without adversely affecting the compression ratio.
 
@@ -24,7 +24,7 @@ In a entry of PNA file, the concatenation of the contents of all the FDAT chunks
 
 It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the zlib datastream. There is not necessarily any correlation between FDAT chunk boundaries and deflate block boundaries or any other feature of the zlib data. For example, it is entirely possible for the terminating zlib check value to be split across FDAT chunks.
 
-In the same vein, there is no required correlation between the structure of the file data (i.e., scanline boundaries) and deflate block boundaries or FDAT chunk boundaries. The complete image data is represented by a single zlib datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
+In the same vein, there is no required correlation between the structure of the file data and deflate block boundaries or FDAT chunk boundaries. The complete image data is represented by a single zlib datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
 
 PNA also uses zlib datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a zlib datastream as specified above.
 
