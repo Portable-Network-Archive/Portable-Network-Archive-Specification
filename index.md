@@ -49,3 +49,4 @@ This specification defines the Internet Media Type "application/pna".
   - [4.4. Additional chunk types](./chunk_specifications/index.md#44-additional-chunk-types)
 - [5. Compression algorithms](./compression_algorithms/index.md)
   - [5.1. Deflate](./compression_algorithms/index.md#51-deflate)
+  - [5.2. ZStandard](./compression_algorithms/index.md#52-zstandard)
