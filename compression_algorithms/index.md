@@ -12,7 +12,7 @@ Deflate-compressed datastreams within PNA are stored in the "zlib" format, which
    Check value:                   4 bytes
 Further details on this format are given in the zlib specification [RFC-1950](../references/index.md#rfc-1950).
 
-For PNA compression method 0, the zlib compression method/flags code must specify method code 0 ("deflate" compression) and an LZ77 window size of not more than 32768 bytes. Note that the zlib compression method number is not the same as the PNA compression method number. The additional flags must not specify a preset dictionary. A PNA decoder must be able to decompress any valid zlib datastream that satisfies these additional constraints.
+For PNA compression method 0, the zlib compression method/flags code must specify method code 1 ("deflate" compression) and an LZ77 window size of not more than 32768 bytes. Note that the zlib compression method number is not the same as the PNA compression method number. The additional flags must not specify a preset dictionary. A PNA decoder must be able to decompress any valid zlib datastream that satisfies these additional constraints.
 
 If the data to be compressed contains 16384 bytes or fewer, the encoder can set the window size by rounding up to a power of 2 (256 minimum). This decreases the memory required not only for encoding but also for decoding, without adversely affecting the compression ratio.
 
