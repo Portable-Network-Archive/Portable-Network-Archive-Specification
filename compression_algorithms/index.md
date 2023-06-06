@@ -34,13 +34,15 @@ Additional documentation and portable C code for deflate and inflate are availab
 
 PNA compression method 1 specifies ZStandard compression with a [RFC-8878](../references/index.md#rfc-8878). ZStandard compression is an LZ77 derivative used in linux kernel, btrfs, squashfs, and related programs. Reference implementations are BSD license and freely available.
 
-PNA also uses ZStandard datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a ZStandard datastream as specified above.
+For PNA compression method 1, the ZStandard compression method/flags code must specify method code 2 ("ZStandard" compression). Note that the ZStandard compression method number is not the same as the PNA compression method number. The additional flags must not specify a preset dictionary. A PNA decoder must be able to decompress any valid ZStandard datastream that satisfies these additional constraints.
 
 In a entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a ZStandard datastream as specified above. This datastream decompresses to file data as described elsewhere in this document.
 
 It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the ZStandard datastream. There is not necessarily any correlation between FDAT chunk boundaries or any other feature of the ZStandard data. For example, it is entirely possible for the terminating ZStandard check value to be split across FDAT chunks.
 
 In the same vein, there is no required correlation between the structure of the file data or FDAT chunk boundaries. The complete image data is represented by a single ZStandard datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
+
+PNA also uses ZStandard datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a ZStandard datastream as specified above.
 
 Additional documentation and Reference implementations of ZStandard are available from the GitHub at [https://facebook.github.io/zstd/](https://facebook.github.io/zstd/) and [https://github.com/facebook/zstd](https://github.com/facebook/zstd)
 
