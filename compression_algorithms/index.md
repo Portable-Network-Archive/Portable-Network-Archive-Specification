@@ -46,3 +46,21 @@ PNA also uses ZStandard datastreams in SDAT chunks, where the remainder of the c
 
 Additional documentation and Reference implementations of ZStandard are available from the GitHub at [https://facebook.github.io/zstd/](https://facebook.github.io/zstd/) and [https://github.com/facebook/zstd](https://github.com/facebook/zstd)
 
+### 5.3. LZMA
+
+PNA compression method 2 specifies LZMA compression with a [](). LZMA compression is an LZ77 derivative used in linux kernel, 7-zip, xz-utils, and related programs. Reference implementations are BSD license and freely available.
+
+LZMA-compressed datastreams within PNA are stored in the "xz" format.
+Further details on this format are given in the xz specification [https://tukaani.org/xz/xz-file-format.txt](https://tukaani.org/xz/xz-file-format.txt).
+
+For PNA compression method 2, the LZMA compression method/flags code must specify method code 4 ("LZMA" compression). Note that the LZMA compression method number is not the same as the PNA compression method number. The additional flags must not specify a preset dictionary. A PNA decoder must be able to decompress any valid LZMA datastream that satisfies these additional constraints.
+
+In a entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a LZMA datastream as specified above. This datastream decompresses to file data as described elsewhere in this document.
+
+It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the LZMA datastream. There is not necessarily any correlation between FDAT chunk boundaries or any other feature of the LZMA data. For example, it is entirely possible for the terminating LZMA check value to be split across FDAT chunks.
+
+In the same vein, there is no required correlation between the structure of the file data or FDAT chunk boundaries. The complete image data is represented by a single LZMA datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
+
+PNA also uses LZMA datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a LZMA datastream as specified above.
+
+Additional documentation and Reference implementations of LZMA are available from the GitHub at [https://github.com/tukaani-project/xz](https://github.com/tukaani-project/xz).
