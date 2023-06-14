@@ -51,3 +51,4 @@ This specification defines the Internet Media Type "application/pna".
   - [5.1. Deflate](./compression_algorithms/index.md#51-deflate)
   - [5.2. ZStandard](./compression_algorithms/index.md#52-zstandard)
   - [5.3. LZMA](./compression_algorithms/index.md#53-lzma)
+- [6. Encryption algorithms](./encryption_algorithms/index.md)
