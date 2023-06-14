@@ -47,3 +47,7 @@ This specification defines the Internet Media Type "application/pna".
       - [4.2.2.1 fPRM File permission](./chunk_specifications/index.md#4221-fprm-file-permission)
   - [4.3. Summary of standard chunks](./chunk_specifications/index.md#43-summary-of-standard-chunks)
   - [4.4. Additional chunk types](./chunk_specifications/index.md#44-additional-chunk-types)
+- [5. Compression algorithms](./compression_algorithms/index.md)
+  - [5.1. Deflate](./compression_algorithms/index.md#51-deflate)
+  - [5.2. ZStandard](./compression_algorithms/index.md#52-zstandard)
+  - [5.3. LZMA](./compression_algorithms/index.md#53-lzma)
