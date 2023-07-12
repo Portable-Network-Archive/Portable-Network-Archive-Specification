@@ -8,8 +8,6 @@ PNA cipher method 0 specifies Rijndael encryption with a key length of 256 bits 
 
 Rijndael-encrypted datastreams within PNA are stored in a format depending on the cipher mode.
 
-Further details on AES are given in the FIPS Publication 197 [FIPS-197](https://csrc.nist.gov/publications/detail/fips/197/final).
-
 For PNA cipher method 0, the AES encryption method/flags code must specify method code 1 ("Rijndael" encryption). Note that the AES encryption method number is not the same as the PNA cipher method number. A PNA decoder must be able to decrypt any valid AES datastream that satisfies these additional constraints.
 
 In an entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a Rijndael-encrypted datastream as specified above. This datastream decrypts to file data as described elsewhere in this document.
@@ -20,5 +18,5 @@ In the same vein, there is no required correlation between the structure of the 
 
 PNA also uses Rijndael-encrypted datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a Rijndael-encrypted datastream as specified above.
 
-Additional documentation is available from the Cryptographic Standards and Guidelines archives at [http://www.nist.gov/aes](http://www.nist.gov/aes).
+Additional documentation is available from the Cryptographic Standards and Guidelines archives at [http://www.nist.gov/aes](http://www.nist.gov/aes) and the FIPS Publication 197 [FIPS-197](https://csrc.nist.gov/publications/detail/fips/197/final).
 
