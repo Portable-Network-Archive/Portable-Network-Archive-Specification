@@ -1,4 +1,4 @@
-## 6. Encryption algorithms
+## 6. Cipher algorithms
 
 PNA employs multiple cipher algorithms. This specification is designed to ensure the secure use of PNA by enabling the selection of alternative cipher algorithms in the event of a critical flaw discovered in a specific algorithm. In this chapter, we will define the cipher algorithms available for use in PNA. For information on cipher mode, please refer to the following chapter.
 
