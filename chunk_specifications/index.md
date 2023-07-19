@@ -39,7 +39,7 @@ This signals the end of the PNA data stream.
 The chunk data area is empty.
 Decoders should not load more than this chunk.
 
-### 4.1.3. ANXT Archive continue marker
+### 4.1.3. ANXT Archive continues marker
 
 Indicates that the archive is split and the following file exists.
 The Archive number field of the `AHED` chunk of the next file will be the value of the Archive number field of the `AHED` chunk of the current file incremented by 1.

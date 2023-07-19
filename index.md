@@ -31,7 +31,7 @@ This specification defines the Internet Media Type "application/pna".
   - [4.1. Critical chunks](./chunk_specifications/index.md#41-critical-chunks)
     - [4.1.1. AHED Archive header](./chunk_specifications/index.md#411-ahed-archive-header)
     - [4.1.2. AEND Archive tailer](./chunk_specifications/index.md#412-aend-archive-tailer)
-    - [4.1.3. ANXT Archive continue marker](./chunk_specifications/index.md#413-anxt-archive-continue-marker)
+    - [4.1.3. ANXT Archive continues marker](./chunk_specifications/index.md#413-anxt-archive-continues-marker)
     - [4.1.4. FHED File header](./chunk_specifications/index.md#414-fhed-file-header)
     - [4.1.5. PHSF Password hash](./chunk_specifications/index.md#415-phsf-password-hash)
     - [4.1.6. FDAT File data](./chunk_specifications/index.md#416-fdat-file-data)
