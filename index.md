@@ -54,3 +54,6 @@ This specification defines the Internet Media Type "application/pna".
 - [6. Cipher algorithms](./cipher_algorithms/index.md)
   - [6.1. Rijndael](./cipher_algorithms/index.md#61-rijndael)
   - [6.2. Camellia](./cipher_algorithms/index.md#62-camellia)
+- [7. Cipher modes](./cipher_modes/index.md)
+  - [7.1. Cipher Block Chaining Mode (CBC)](./cipher_modes/index.md#71-cipher-block-chaining-mode-cbc)
+  - [7.2. Counter Mode (CTR)](./cipher_modes/index.md#72-counter-mode-ctr)
