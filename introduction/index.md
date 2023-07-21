@@ -24,7 +24,7 @@ Compressible: Provides flexible compression by supporting multiple compression a
 Encryptable: Supports 256-bit AES and 256-bit Camellia with the same encryption strength as 256-bit AES.
 Splittable: By using the same data unit as the PNG file, the archive can be easily split.
 Interchangeable: any standard-conforming PNA decoder must read all conforming PNA files.
-Flexible: The format allows for future extensions and private add-ons, without compromising interchangeability of basic PNA.
+Flexible: The format allows for future extensions and private add-ons, without compromising the interchangeability of basic PNA.
 Robust: the design supports full file integrity checking as well as simple, quick detection of common transmission errors.
 
 The main part of this specification gives the definition of the file format and recommendations for encoder and decoder behavior. An appendix gives the rationale for many design decisions. Although the rationale is not part of the formal specification, reading it can help implementors understand the design. Cross-references in the main text point to relevant parts of the rationale.
