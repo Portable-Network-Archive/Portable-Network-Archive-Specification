@@ -15,12 +15,12 @@ The AHED chunk must appear FIRST. It contains:
 
 ##### Major version
 
-Currently only 0 is defined.
+Currently, only 0 is defined.
 It may be changed if there is a change in the structure of each chunk that makes up the PNA.
 
 ##### Minor version
 
-Currently only 0 is defined.
+Currently, only 0 is defined.
 It may be changed when there is a change in the type of chunks that make up the PNA.
 
 ##### General purpose bit flag
