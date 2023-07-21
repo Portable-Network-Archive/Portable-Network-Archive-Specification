@@ -47,7 +47,7 @@ The chunk data area is empty.
 
 ### 4.1.4. FHED File header
 
-Basic information of each entry is stored.
+Basic information about each entry is stored.
 
 | Significance       |  Size  | Description        |
 |:-------------------|:------:|:-------------------|
