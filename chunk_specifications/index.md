@@ -151,7 +151,7 @@ All Auxiliary Chunks must appear before the `AEND` chunk.
 
 #### 4.2.1 Timestamp information
 
-##### 4.2.1.1 cTIM Created timestamp]
+##### 4.2.1.1 cTIM Created timestamp
 
 The creation datetime is recorded in unix time.
 When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it indicates the creation datetime of the entry.
