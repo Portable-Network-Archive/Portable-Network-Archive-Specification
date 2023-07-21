@@ -213,4 +213,4 @@ New public chunks will be registered only if they are of use to others and do no
 
 Applications can also use private chunk types to carry data that is not of interest to other applications. See Recommendations for Encoders: Use of private chunks.
 
-Decoders must be prepared to encounter unrecognized public or private chunk type codes. Unrecognized chunk types must be handled as described in Chunk naming conventions.
+Decoders must be prepared to encounter unrecognized public or private chunk-type codes. Unrecognized chunk types must be handled as described in Chunk naming conventions.

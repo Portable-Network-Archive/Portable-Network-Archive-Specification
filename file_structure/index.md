@@ -133,7 +133,7 @@ Rules for PNA editors are discussed further in Chunk Ordering Rules.
 
 For example, the hypothetical chunk type name bLOb has the property bits:
 
-bLOb  <-- 32 bit chunk type code represented in text form
+bLOb  <-- 32-bit chunk type code represented in text form
 ||||
 |||+- Safe-to-copy bit is 1 (lowercase letter; bit 5 is 1)
 ||+-- Reserved bit is 0     (uppercase letter; bit 5 is 0)
