@@ -24,7 +24,7 @@ In a entry of PNA file, the concatenation of the contents of all the FDAT chunks
 
 It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the zlib datastream. There is not necessarily any correlation between FDAT chunk boundaries and deflate block boundaries or any other feature of the zlib data. For example, it is entirely possible for the terminating zlib check value to be split across FDAT chunks.
 
-In the same vein, there is no required correlation between the structure of the file data and deflate block boundaries or FDAT chunk boundaries. The complete image data is represented by a single zlib datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
+In the same vein, there is no required correlation between the structure of the file data and deflate block boundaries or FDAT chunk boundaries. The complete entry data is represented by a single zlib datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
 
 PNA also uses zlib datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a zlib datastream as specified above.
 
@@ -40,7 +40,7 @@ In a entry of PNA file, the concatenation of the contents of all the FDAT chunks
 
 It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the ZStandard datastream. There is not necessarily any correlation between FDAT chunk boundaries or any other feature of the ZStandard data. For example, it is entirely possible for the terminating ZStandard check value to be split across FDAT chunks.
 
-In the same vein, there is no required correlation between the structure of the file data or FDAT chunk boundaries. The complete image data is represented by a single ZStandard datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
+In the same vein, there is no required correlation between the structure of the file data or FDAT chunk boundaries. The complete entry data is represented by a single ZStandard datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
 
 PNA also uses ZStandard datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a ZStandard datastream as specified above.
 
@@ -59,7 +59,7 @@ In a entry of PNA file, the concatenation of the contents of all the FDAT chunks
 
 It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the LZMA datastream. There is not necessarily any correlation between FDAT chunk boundaries or any other feature of the LZMA data. For example, it is entirely possible for the terminating LZMA check value to be split across FDAT chunks.
 
-In the same vein, there is no required correlation between the structure of the file data or FDAT chunk boundaries. The complete image data is represented by a single LZMA datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
+In the same vein, there is no required correlation between the structure of the file data or FDAT chunk boundaries. The complete entry data is represented by a single LZMA datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
 
 PNA also uses LZMA datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a LZMA datastream as specified above.
 
