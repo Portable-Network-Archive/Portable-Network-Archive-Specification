@@ -58,3 +58,6 @@ This specification defines the Internet Media Type "application/pna".
 - [7. Cipher modes](./cipher_modes/index.md)
   - [7.1. Cipher Block Chaining Mode (CBC)](./cipher_modes/index.md#71-cipher-block-chaining-mode-cbc)
   - [7.2. Counter Mode (CTR)](./cipher_modes/index.md#72-counter-mode-ctr)
+- [8. Key derivation algorithms](./key_derivation_algorithms/index.md)
+  - [8.1. Password-Based Key Derivation Function 2(PBKDF2)](./key_derivation_algorithms/index.md#81-password-based-key-derivation-function-2pbkdf2)
+  - [8.2. Argon2](./key_derivation_algorithms/index.md#82-argon2)

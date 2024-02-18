@@ -31,3 +31,23 @@ Dworkin, M., "Recommendation for Block Cipher Modes of Operation: Methods and Te
 
 ### **[CRYPTO-S]**
 B. Schneier, "Applied Cryptography Second Edition", John Wiley & Sons, New York, NY, 1995, ISBN 0-471-12845-7.
+
+### **[NIST SP 800-132]**
+National Institute of Standards and Technology, "Recommendation for Password-Based Key Derivation - Part 1: Storage Applications", NIST SP 800-132, December 2010.
+[http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-132.pdf](http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-132.pdf)
+
+## **[RFC-2898]**
+Kaliski, B., "PKCS #5: Password-Based Cryptography Specification Version 2.0", RFC 2898, RSA Laboratories, September 2000.
+[https://tools.ietf.org/html/rfc2898](https://tools.ietf.org/html/rfc2898)
+
+## **[RFC-6070]**
+Hoffman, P., and J. Schaad, "PKCS #5: Password-Based Key Derivation Function 2 (PBKDF2) Test Vectors", RFC 6070, SJD AB, January 2011.
+[https://tools.ietf.org/html/rfc6070](https://tools.ietf.org/html/rfc6070)
+
+## **[Argon2]**
+Alex Biryukov, Daniel Dinu, and Dmitry Khovratovich University of Luxembourg, Luxembourg, "Argon2: the memory-hard function for password hashing and other applications,", 2015.
+[https://www.cryptolux.org/images/0/0d/Argon2.pdf](https://www.cryptolux.org/images/0/0d/Argon2.pdf)
+
+## **[RFC-9106]**
+A. Biryukov University of Luxembourg, D. Dinu University of Luxembourg, D. Khovratovich ABDK Consulting, S. Josefsson SJD AB, Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications, September 2021.
+[https://tools.ietf.org/html/rfc9106](https://tools.ietf.org/html/rfc9106)
