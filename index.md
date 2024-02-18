@@ -43,6 +43,7 @@ This specification defines the Internet Media Type "application/pna".
     - [4.2.1 Timestamp information](./chunk_specifications/index.md#421-timestamp-information)
       - [4.2.1.1 cTIM Created timestamp](./chunk_specifications/index.md#4211-ctim-created-timestamp)
       - [4.2.1.2 mTIM Modified timestamp](./chunk_specifications/index.md#4212-mtim-modified-timestamp)
+      - [4.2.1.3 aTIM Accessed timestamp](./chunk_specifications/index.md#4213-atim-accessed-timestamp)
     - [4.2.2 permission information](./chunk_specifications/index.md#422-permission-information)
       - [4.2.2.1 fPRM File permission](./chunk_specifications/index.md#4221-fprm-file-permission)
   - [4.3. Summary of standard chunks](./chunk_specifications/index.md#43-summary-of-standard-chunks)
