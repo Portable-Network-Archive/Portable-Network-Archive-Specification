@@ -169,6 +169,14 @@ When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it i
 |:------:|:---------------|
 | 8byte  | Unix timestamp |
 
+##### 4.2.1.3 aTIM Accessed timestamp
+
+The last accessed datetime is recorded in Unix time.
+When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it indicates the last accessed datetime of the entry.
+
+|  size  | description    |
+|:------:|:---------------|
+| 8byte  | Unix timestamp |
 
 #### 4.2.2 permission information
 
