@@ -153,21 +153,21 @@ All Auxiliary Chunks must appear before the `AEND` chunk.
 
 ##### 4.2.1.1 cTIM Created timestamp
 
-The creation datetime is recorded in unix time.
+The creation datetime is recorded in Unix time.
 When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it indicates the creation datetime of the entry.
 
 |  size  | description    |
 |:------:|:---------------|
-| 8byte  | unix timestamp |
+| 8byte  | Unix timestamp |
 
 ##### 4.2.1.2 mTIM Modified timestamp
 
-The last modified datetime is recorded in unix time.
+The last modified datetime is recorded in Unix time.
 When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it indicates the last modified datetime of the entry.
 
 |  size  | description    |
 |:------:|:---------------|
-| 8byte  | unix timestamp |
+| 8byte  | Unix timestamp |
 
 
 #### 4.2.2 permission information
@@ -181,10 +181,10 @@ This chunk appeared after `FHAD` chunk and before `FEND` chunk.
 |:-------------|:------:|:----------------------|
 | uid          | 8-byte | user ID               |
 | uname length | 1-byte | length of uname       |
-| uname        | n-byte | unix user name        |
+| uname        | n-byte | Unix user name        |
 | gid          | 8-byte | group ID              |
 | gname length | 1-byte | length of gname       |
-| gname        | n-byte | unix group name       |
+| gname        | n-byte | Unix group name       |
 | permissions  | 2-byte | file permission bytes |
 
 ### 4.3. Summary of standard chunks
