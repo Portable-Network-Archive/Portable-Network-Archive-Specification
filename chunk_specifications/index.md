@@ -95,7 +95,7 @@ Not interested in the value of this field, if Encryption method filed value is 0
 
 ##### File path
 
-The path of entry encoded by UTF-8.
+The path of entry is encoded by UTF-8.
 The / is used as a path separator.
 Paths should not contain / at the leading or trailing.
 Decoders should ignore them even if they contain a leading or trailing /.
