@@ -61,3 +61,7 @@ This specification defines the Internet Media Type "application/pna".
 - [8. Key derivation algorithms](./key_derivation_algorithms/index.md)
   - [8.1. Password-Based Key Derivation Function 2(PBKDF2)](./key_derivation_algorithms/index.md#81-password-based-key-derivation-function-2pbkdf2)
   - [8.2. Argon2](./key_derivation_algorithms/index.md#82-argon2)
+- [9. Chunk Ordering Rules](./chunk_ordering_rules/index.md)
+  - [9.1. Behavior of PNA editors](./chunk_ordering_rules/index.md#91-behavior-of-pna-editors)
+  - [9.2. Ordering of ancillary chunks](./chunk_ordering_rules/index.md#92-ordering-of-ancillary-chunks)
+  - [9.3. Ordering of critical chunks](./chunk_ordering_rules/index.md#93-ordering-of-critical-chunks)
