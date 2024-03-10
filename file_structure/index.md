@@ -30,8 +30,8 @@ Decoders are required to select the appropriate algorithm based on this informat
 
 **Ancillary:**
 
-Ancillary information such as the creation and update datetime, ownership, permissions and others.
-These are not required for the entry.
+Ancillary information such as the creation and update datetime, ownership, permissions, and others.
+These are not required for entry.
 
 **Data:**
 
@@ -91,7 +91,7 @@ Chunks can appear in any order, subject to the restrictions placed on each chunk
 
 ### 3.6. Chunk naming conventions
 
-Chunk type codes are assigned so that a decoder can determine some properties of a chunk even when it does not recognize the type code. These rules are intended to allow safe, flexible extension of the PNA format, by allowing a decoder to decide what to do when it encounters an unknown chunk. The naming rules are not normally of interest when the decoder does recognize the chunk's type.
+Chunk type codes are assigned so that a decoder can determine some properties of a chunk even when it does not recognize the type code. These rules are intended to allow safe, flexible extension of PNA format, by allowing a decoder to decide what to do when it encounters an unknown chunk. The naming rules are not normally of interest when the decoder does recognize the chunk's type.
 
 Four bits of the type code, namely bit 5 (value 32) of each byte, are used to convey chunk properties. This choice means that a human can read off the assigned properties according to whether each letter of the type code is uppercase (bit 5 is 0) or lowercase (bit 5 is 1). However, decoders should test the properties of an unknown chunk by numerically testing the specified bits; testing whether a character is uppercase or lowercase is inefficient, and even incorrect if a locale-specific case definition is used.
 
@@ -109,12 +109,12 @@ Chunks that are necessary for successful extract of the file's contents are call
 **Private bit: bit 5 of second byte**
 
 0 (uppercase) = public, 1 (lowercase) = private.
-A public chunk is one that is part of the PNA specification or is registered in the list of PNA special-purpose public chunk types. Applications can also define private (unregistered) chunks for their own purposes. The names of private chunks must have a lowercase second letter, while public chunks will always be assigned names with uppercase second letters. Note that decoders do not need to test the private-chunk property bit, since it has no functional significance; it is simply an administrative convenience to ensure that public and private chunk names will not conflict. See [Additional chunk types](../chunk_specifications/index.md#44-additional-chunk-types), and Recommendations for Encoders: [Use of private chunks]().
+A public chunk is one that is part of PNA specification or is registered in the list of PNA special-purpose public chunk types. Applications can also define private (unregistered) chunks for their own purposes. The names of private chunks must have a lowercase second letter, while public chunks will always be assigned names with uppercase second letters. Note that decoders do not need to test the private-chunk property bit, since it has no functional significance; it is simply an administrative convenience to ensure that public and private chunk names will not conflict. See [Additional chunk types](../chunk_specifications/index.md#44-additional-chunk-types), and Recommendations for Encoders: [Use of private chunks](TODO: link to ../recommendations_for_encoders/index.md).
 
 **Reserved bit: bit 5 of third byte**
 
 Must be 0 (uppercase) in files conforming to this version of PNA.
-The significance of the case of the third letter of the chunk name is reserved for possible future expansion. At the present time all chunk names must have uppercase third letters. (Decoders should not complain about a lowercase third letter, however, as some future version of the PNA specification could define a meaning for this bit. It is sufficient to treat a chunk with a lowercase third letter in the same way as any other unknown chunk type.)
+The significance of the case of the third letter of the chunk name is reserved for possible future expansion. At the present time all chunk names must have uppercase third letters. (Decoders should not complain about a lowercase third letter, however, as some future version of PNA specification could define a meaning for this bit. It is sufficient to treat a chunk with a lowercase third letter in the same way as any other unknown chunk type.)
 
 **Safe-to-copy bit: bit 5 of fourth byte**
 

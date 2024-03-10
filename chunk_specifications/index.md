@@ -16,12 +16,12 @@ The AHED chunk must appear FIRST. It contains:
 ##### Major version
 
 Currently, only 0 is defined.
-It may be changed if there is a change in the structure of each chunk that makes up the PNA.
+It may be changed if there is a change in the structure of each chunk that makes up PNA.
 
 ##### Minor version
 
 Currently, only 0 is defined.
-It may be changed when there is a change in the type of chunks that make up the PNA.
+It may be changed when there is a change in the type of chunks that make up PNA.
 
 ##### General purpose bit flag
 
@@ -35,7 +35,7 @@ Archive number is start with 0.
 ### 4.1.2. AEND Archive tailer
 
 This chunk must appear last.
-This signals the end of the PNA data stream.
+This signals the end of PNA data stream.
 The chunk data area is empty.
 Decoders should not load more than this chunk.
 
