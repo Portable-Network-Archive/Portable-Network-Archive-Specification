@@ -39,7 +39,7 @@ Actual data of the entry.
 The data is allowed to be split into multiple chunks.
 By splitting the data into smaller chunks can help to detect file corruption more quickly.
 Depending on the type of entry, this data is also allowed to be empty.
-About the types of entry are in the next chapter.
+About the types of entries are in the next chapter.
 
 **Tailer:**
 
