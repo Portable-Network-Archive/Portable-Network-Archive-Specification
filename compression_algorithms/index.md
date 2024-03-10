@@ -20,7 +20,7 @@ The compressed data within the zlib datastream is stored as a series of blocks, 
 
 The check value stored at the end of the zlib datastream is calculated on the uncompressed data represented by the datastream. Note that the algorithm used is not the same as the CRC calculation used for PNA chunk check values. The zlib check value is useful mainly as a cross-check that the deflate and inflate algorithms are implemented correctly. Verifying the chunk CRCs provides adequate confidence that the PNA file has been transmitted undamaged.
 
-In a entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a zlib datastream as specified above. This datastream decompresses to file data as described elsewhere in this document.
+In an entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a zlib datastream as specified above. This datastream decompresses to file data as described elsewhere in this document.
 
 It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the zlib datastream. There is not necessarily any correlation between FDAT chunk boundaries and deflate block boundaries or any other feature of the zlib data. For example, it is entirely possible for the terminating zlib check value to be split across FDAT chunks.
 
@@ -36,7 +36,7 @@ PNA compression method 1 specifies ZStandard compression with a [RFC-8878](../re
 
 For PNA compression method 1, the ZStandard compression method/flags code must specify method code 2 ("ZStandard" compression). Note that the ZStandard compression method number is not the same as the PNA compression method number. The additional flags must not specify a preset dictionary. A PNA decoder must be able to decompress any valid ZStandard datastream that satisfies these additional constraints.
 
-In a entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a ZStandard datastream as specified above. This datastream decompresses to file data as described elsewhere in this document.
+In an entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a ZStandard datastream as specified above. This datastream decompresses to file data as described elsewhere in this document.
 
 It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the ZStandard datastream. There is not necessarily any correlation between FDAT chunk boundaries or any other feature of the ZStandard data. For example, it is entirely possible for the terminating ZStandard check value to be split across FDAT chunks.
 
@@ -55,7 +55,7 @@ Further details on this format are given in the xz specification [https://tukaan
 
 For PNA compression method 2, the LZMA compression method/flags code must specify method code 4 ("LZMA" compression). Note that the LZMA compression method number is not the same as the PNA compression method number. The additional flags must not specify a preset dictionary. A PNA decoder must be able to decompress any valid LZMA datastream that satisfies these additional constraints.
 
-In a entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a LZMA datastream as specified above. This datastream decompresses to file data as described elsewhere in this document.
+In an entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a LZMA datastream as specified above. This datastream decompresses to file data as described elsewhere in this document.
 
 It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the LZMA datastream. There is not necessarily any correlation between FDAT chunk boundaries or any other feature of the LZMA data. For example, it is entirely possible for the terminating LZMA check value to be split across FDAT chunks.
 
