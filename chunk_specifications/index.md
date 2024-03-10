@@ -25,7 +25,7 @@ It may be changed when there is a change in the type of chunks that make up PNA.
 
 ##### General purpose bit flag
 
-__Bit0__ ~ __Bit15__ currently dose not used. reserve for future.
+__Bit0__ ~ __Bit15__ currently does not used. reserve for the future.
 
 ##### Archive number
 
