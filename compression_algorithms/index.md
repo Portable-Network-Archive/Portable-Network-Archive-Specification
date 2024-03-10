@@ -44,7 +44,7 @@ In the same vein, there is no required correlation between the structure of the 
 
 PNA also uses ZStandard datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a ZStandard datastream as specified above.
 
-Additional documentation and Reference implementations of ZStandard are available from the GitHub at [https://facebook.github.io/zstd/](https://facebook.github.io/zstd/) and [https://github.com/facebook/zstd](https://github.com/facebook/zstd)
+Additional documentation and Reference implementations of ZStandard are available from GitHub at [https://facebook.github.io/zstd/](https://facebook.github.io/zstd/) and [https://github.com/facebook/zstd](https://github.com/facebook/zstd)
 
 ### 5.3. LZMA
 
@@ -63,4 +63,4 @@ In the same vein, there is no required correlation between the structure of the 
 
 PNA also uses LZMA datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a LZMA datastream as specified above.
 
-Additional documentation and Reference implementations of LZMA are available from the GitHub at [https://github.com/tukaani-project/xz](https://github.com/tukaani-project/xz).
+Additional documentation and Reference implementations of LZMA are available from GitHub at [https://github.com/tukaani-project/xz](https://github.com/tukaani-project/xz).
