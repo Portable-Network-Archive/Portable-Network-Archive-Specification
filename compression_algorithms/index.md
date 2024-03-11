@@ -1,5 +1,7 @@
 ## 5. Compression algorithms
 
+PNA allows the use of multiple compression algorithms. This is designed to achieve high performance by switching compression algorithms depending on the intended use and environment.
+
 ### 5.1. Deflate
 
 PNA compression method 0 specifies deflate/inflate compression with a sliding window of at most 32768 bytes. Deflate compression is an LZ77 derivative used in zip, gzip, pkzip, and related programs. Extensive research has been done supporting its patent-free status. Portable C implementations are freely available.
