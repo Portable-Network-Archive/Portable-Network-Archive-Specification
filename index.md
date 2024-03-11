@@ -65,3 +65,6 @@ This specification defines the Internet Media Type "application/pna".
   - [9.1. Behavior of PNA editors](./chunk_ordering_rules/index.md#91-behavior-of-pna-editors)
   - [9.2. Ordering of ancillary chunks](./chunk_ordering_rules/index.md#92-ordering-of-ancillary-chunks)
   - [9.3. Ordering of critical chunks](./chunk_ordering_rules/index.md#93-ordering-of-critical-chunks)
+- [10. Miscellaneous Topics](./miscellaneous_topics/index.md)
+  - [10.1. File name extension](./miscellaneous_topics/index.md#101-file-name-extension)
+  - [10.2. Split file name extension](./miscellaneous_topics/index.md#102-split-file-name-extension)
