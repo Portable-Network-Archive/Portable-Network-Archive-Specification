@@ -68,3 +68,6 @@ This specification defines the Internet Media Type "application/pna".
 - [10. Miscellaneous Topics](./miscellaneous_topics/index.md)
   - [10.1. File name extension](./miscellaneous_topics/index.md#101-file-name-extension)
   - [10.2. Split file name extension](./miscellaneous_topics/index.md#102-split-file-name-extension)
+- [11. Recommendations for Encoders](./recommendations_for_encoders/index.md)
+  - [11.1. Use of private chunks](./recommendations_for_encoders/index.md#111-use-of-private-chunks)
+  - [11.2. Private type and method codes](./recommendations_for_encoders/index.md#112-private-type-and-method-codes)
