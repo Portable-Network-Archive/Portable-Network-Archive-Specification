@@ -71,3 +71,6 @@ This specification defines the Internet Media Type "application/pna".
 - [11. Recommendations for Encoders](./recommendations_for_encoders/index.md)
   - [11.1. Use of private chunks](./recommendations_for_encoders/index.md#111-use-of-private-chunks)
   - [11.2. Private type and method codes](./recommendations_for_encoders/index.md#112-private-type-and-method-codes)
+- [12. Recommendations for Decoders](./recommendations_for_decoders/index.md)
+  - [12.1. Error checking](./recommendations_for_decoders/index.md#121-error-checking)
+  - [12.2. Text processing](./recommendations_for_decoders/index.md#122-text-processing)
