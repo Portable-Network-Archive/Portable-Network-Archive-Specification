@@ -195,6 +195,20 @@ This chunk appeared after `FHAD` chunk and before `FEND` chunk.
 | gname        | n-byte | Unix group name       |
 | permissions  | 2-byte | file permission bytes |
 
+#### 4.2.3 Extended attribute
+
+##### 4.2.3.1 xATR Extended attribute
+
+An extended attribute are recorded.
+this chunk appeared after `FHAD` chunk and before `FEND` chunk. this chunk can appear many times.
+
+| significance |  size  | description           |
+|:-------------|:------:|:----------------------|
+| name length  | 4-byte | length of name        |
+| name         | n-byte | attribute name        |
+| body length  | 4-byte | length of body        |
+| body         | n-byte | attribute value       |
+
 ### 4.3. Summary of standard chunks
 
 This table summarizes some properties of the standard chunk types.
@@ -215,6 +229,7 @@ Critical chunks
 | AEND |    No    |    No    | Must be last                       |
 
 ### 4.4. Additional chunk types
+
 Additional public PNG chunk types are defined in the document "Extensions to the PNG 1.2 Specification, Version 1.2.0" [PNG-EXTENSIONS]. Chunks described there are expected to be less widely supported than those defined in this specification. However, application authors are encouraged to use those chunk types whenever appropriate for their applications. Additional chunk types can be proposed for inclusion in that list by contacting the PNG specification maintainers at png-info@uunet.uu.net or at png-group@w3.org.
 
 New public chunks will be registered only if they are of use to others and do not violate the design philosophy of PNG. Chunk registration is not automatic, although it is the intent of the authors that it be straightforward when a new chunk of potentially wide application is needed. Note that the creation of new critical chunk types is discouraged unless absolutely necessary.

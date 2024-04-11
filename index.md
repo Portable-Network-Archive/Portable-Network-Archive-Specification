@@ -46,6 +46,8 @@ PNA is robust, providing both full file integrity checking and simple detection 
       - [4.2.1.3 aTIM Accessed timestamp](./chunk_specifications/index.md#4213-atim-accessed-timestamp)
     - [4.2.2 permission information](./chunk_specifications/index.md#422-permission-information)
       - [4.2.2.1 fPRM File permission](./chunk_specifications/index.md#4221-fprm-file-permission)
+    - [4.2.3 Extended attribute](./chunk_specifications/index.md#423-extended-attribute)
+      - [4.2.3.1 xATR Extended attribute](./chunk_specifications/index.md#4231-xatr-extended-attribute)
   - [4.3. Summary of standard chunks](./chunk_specifications/index.md#43-summary-of-standard-chunks)
   - [4.4. Additional chunk types](./chunk_specifications/index.md#44-additional-chunk-types)
 - [5. Compression algorithms](./compression_algorithms/index.md)
