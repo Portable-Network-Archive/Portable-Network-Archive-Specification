@@ -80,7 +80,7 @@ The compression method is recorded.
 
 The encryption method is recorded.
 0 is not encryption
-1 is AES
+1 is AES (Rijndael)
 2 is Camellia
 
 When this field value is 0, `PHSF` chunk is not required.
@@ -99,6 +99,26 @@ The path of entry is encoded by UTF-8.
 The / is used as a path separator.
 Paths should not contain / at the leading or trailing.
 Decoders should ignore them even if they contain a leading or trailing /.
+
+#### FHED field values (PNA method code)
+
+The `Compression method`, `Encryption method`, and `Cipher mode` fields in the FHED chunk must be set to the following PNA method codes (integer values):
+
+| Field               | Value | Algorithm/Mode        | Note                       |
+|:--------------------|------:|:----------------------|:---------------------------|
+| Compression method  | 0     | No compression        |                            |
+|                     | 1     | Deflate               | zlib compatible            |
+|                     | 2     | Zstandard             |                            |
+|                     | 4     | LZMA                  | xz                         |
+| Encryption method   | 0     | No encryption         |                            |
+|                     | 1     | AES (Rijndael)        | 256-bit key                |
+|                     | 2     | Camellia              | 256-bit key                |
+| Cipher mode         | 0     | CBC                   | Cipher Block Chaining      |
+|                     | 1     | CTR                   | Counter Mode               |
+
+**Note:**
+- Do not use algorithm-internal method codes (such as zlib's method/flags code) in these fields. Only the PNA method code (integer value) must be stored in the FHED chunk fields.
+- For extensions or private algorithms, use values 64 or greater as recommended in the encoder guidelines.
 
 #### 4.1.5. PHSF Password hash
 
