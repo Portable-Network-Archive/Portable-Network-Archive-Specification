@@ -79,3 +79,4 @@ PNA is robust, providing both full file integrity checking and simple detection 
 - [12. Recommendations for Decoders](./recommendations_for_decoders/index.md)
   - [12.1. Error checking](./recommendations_for_decoders/index.md#121-error-checking)
   - [12.2. Text processing](./recommendations_for_decoders/index.md#122-text-processing)
+- [13. Glossary](./glossary/index.md)
