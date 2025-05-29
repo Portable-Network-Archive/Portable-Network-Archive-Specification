@@ -230,9 +230,9 @@ Critical chunks
 
 ### 4.4. Additional chunk types
 
-Additional public PNG chunk types are defined in the document "Extensions to the PNG 1.2 Specification, Version 1.2.0" [PNG-EXTENSIONS]. Chunks described there are expected to be less widely supported than those defined in this specification. However, application authors are encouraged to use those chunk types whenever appropriate for their applications. Additional chunk types can be proposed for inclusion in that list by contacting the PNG specification maintainers at png-info@uunet.uu.net or at png-group@w3.org.
+Additional public PNA chunk types are defined in the document "Extensions to the PNA 0.0 Specification, Version 0.0.0" [PNA-EXTENSIONS]. Chunks described there are expected to be less widely supported than those defined in this specification. However, application authors are encouraged to use those chunk types whenever appropriate for their applications. Additional chunk types can be proposed for inclusion in that list by contacting the PNA specification maintainers at @Portable-Network-Archive on GitHub.
 
-New public chunks will be registered only if they are of use to others and do not violate the design philosophy of PNG. Chunk registration is not automatic, although it is the intent of the authors that it be straightforward when a new chunk of potentially wide application is needed. Note that the creation of new critical chunk types is discouraged unless absolutely necessary.
+New public chunks will be registered only if they are of use to others and do not violate the design philosophy of PNA. Chunk registration is not automatic, although it is the intent of the authors that it be straightforward when a new chunk of potentially wide application is needed. Note that the creation of new critical chunk types is discouraged unless absolutely necessary.
 
 Applications can also use private chunk types to carry data that is not of interest to other applications. See Recommendations for Encoders: Use of private chunks.
 
