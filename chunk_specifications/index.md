@@ -178,6 +178,53 @@ When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it i
 |:------:|:---------------|
 | 8byte  | Unix timestamp |
 
+##### 4.2.1.4 cTNS Created timestamp (Nanoseconds)
+
+Provides the nanosecond portion of the file creation time, to be used in conjunction with the `cTIM` chunk.
+
+- **Context**: Must appear after the `FHED` chunk and before the `FEND` chunk.
+- **Dependency**: Ignored unless `cTIM` is also present.
+- **Interpretation**: `cTIM` seconds + (`cTNS` / 1_000_000_000.0)
+
+| Size   | Description                              |
+|--------|------------------------------------------|
+| 4-byte | Unsigned integer (`u32`), nanoseconds    |
+
+Valid values are in the range `0 <= value < 1,000,000,000`.
+
+##### 4.2.1.5 mTNS Modified timestamp (Nanoseconds)
+
+Provides the nanosecond portion of the last modified time, to be used in conjunction with the `mTIM` chunk.
+
+- **Context**: Must appear after the `FHED` chunk and before the `FEND` chunk.
+- **Dependency**: Ignored unless `mTIM` is also present.
+- **Interpretation**: `mTIM` seconds + (`mTNS` / 1_000_000_000.0)
+
+| Size   | Description                              |
+|--------|------------------------------------------|
+| 4-byte | Unsigned integer (`u32`), nanoseconds    |
+
+Valid values are in the range `0 <= value < 1,000,000,000`.
+
+##### 4.2.1.6 aTNS Accessed timestamp (Nanoseconds)
+
+Provides the nanosecond portion of the last accessed time, to be used in conjunction with the `aTIM` chunk.
+
+- **Context**: Must appear after the `FHED` chunk and before the `FEND` chunk.
+- **Dependency**: Ignored unless `aTIM` is also present.
+- **Interpretation**: `aTIM` seconds + (`aTNS` / 1_000_000_000.0)
+
+| Size   | Description                              |
+|--------|------------------------------------------|
+| 4-byte | Unsigned integer (`u32`), nanoseconds    |
+
+Valid values are in the range `0 <= value < 1,000,000,000`.
+
+**Decoder Notes**:
+- If any `*TNS` chunk is present without its corresponding `*TIM` chunk, it must be ignored.
+- Values outside the range `[0, 999_999_999]` are invalid and must cause a decoder error.
+- Encoders should omit `*TNS` chunks unless sub-second precision is explicitly needed.
+
 #### 4.2.2 permission information
 
 ##### 4.2.2.1 fPRM File permission
@@ -215,18 +262,31 @@ This table summarizes some properties of the standard chunk types.
 
 Critical chunks
 
-| Name | Multiple | Optional | Ordering constraints               |
-|:----:|:--------:|:--------:|:-----------------------------------|
-| AHED |    No    |    No    | Must be first                      |
-| FHED |   Yes    |   Yes    |                                    |
-| PHSF |   Yes    |   Yes    | Before FDAT or SDAT                |
-| FDAT |   Yes    |   Yes    | Multiple FDATs must be consecutive |
-| FEND |   Yes    |   Yes    |                                    |
-| SHED |   Yes    |   Yes    |                                    |
-| SDAT |   Yes    |   Yes    | Multiple SDATs must be consecutive |
-| SEND |   Yes    |   Yes    |                                    |
-| ANXT |    No    |   Yes    |                                    |
-| AEND |    No    |    No    | Must be last                       |
+| Name | Multiple in Archive | Multiple in Entry | Optional | Ordering constraints               |
+|:----:|:-------------------:|:-----------------:|:--------:|:-----------------------------------|
+| AHED |         No          |        N/A        |    No    | Must be first                      |
+| FHED |        Yes          |        No         |   Yes    | Must start an entry                |
+| PHSF |        Yes          |        No         |   Yes    | Before FDAT or SDAT if used        |
+| FDAT |        Yes          |       Yes         |   Yes    | Multiple FDATs must be consecutive |
+| FEND |        Yes          |        No         |   Yes    | Must end an entry                  |
+| SHED |        Yes          |        No         |   Yes    | Must start an Solid mode data      |
+| SDAT |        Yes          |       Yes         |   Yes    | Multiple SDATs must be consecutive |
+| SEND |        Yes          |        No         |   Yes    | Must end an Solid mode data        |
+| ANXT |         No          |        N/A        |   Yes    |                                    |
+| AEND |         No          |        N/A        |    No    | Must be last                       |
+
+Ancillary chunks
+
+| Name  | Multiple in Archive | Multiple in Entry | Optional | Ordering constraints                          |
+|:-----:|:-------------------:|:-----------------:|:--------:|:----------------------------------------------|
+| cTIM  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| mTIM  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| aTIM  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| cTNS  |        Yes          |        No         |   Yes    | Must accompany `cTIM`, between `FHED`–`FEND` |
+| mTNS  |        Yes          |        No         |   Yes    | Must accompany `mTIM`, between `FHED`–`FEND` |
+| aTNS  |        Yes          |        No         |   Yes    | Must accompany `aTIM`, between `FHED`–`FEND` |
+| fPRM  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| xATR  |        Yes          |       Yes         |   Yes    | Between `FHED` and `FEND`                    |
 
 ### 4.4. Additional chunk types
 
