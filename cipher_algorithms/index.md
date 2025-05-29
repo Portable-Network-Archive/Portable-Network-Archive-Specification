@@ -10,7 +10,7 @@ Rijndael-encrypted datastreams within PNA are stored in a format depending on th
 
 For PNA cipher method 0, the Rijndael encryption method/flags code must specify method code 1 ("Rijndael" encryption). Note that the Rijndael encryption method number is not the same as PNA cipher method number. A PNA decoder must be able to decrypt any valid Rijndael-encrypted datastream that satisfies these additional constraints.
 
-In an entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a Rijndael-encrypted datastream as specified above. This datastream decrypts to file data as described elsewhere in this document.
+In an entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHED and FEND makes up a Rijndael-encrypted datastream as specified above. This datastream decrypts to file data as described elsewhere in this document.
 
 It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the Rijndael-encrypted datastream. There is not necessarily any correlation between FDAT chunk boundaries and block boundaries or any other feature of the Rijndael-encrypted data. 
 
@@ -28,7 +28,7 @@ Camellia-encrypted datastream within PNA is stored in a format depending on the 
 
 For PNA cipher method 1, the Camellia encryption method/flags code must specify method code 2 ("Camellia" encryption). Note that the Camellia encryption method number is not the same as PNA cipher method number. A PNA decoder must be able to decrypt any valid Camellia-encrypted datastream that satisfies these additional constraints.
 
-In an entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHAD and FEND makes up a Camellia-encrypted datastream as specified above. This datastream decrypts to file data as described elsewhere in this document.
+In an entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHED and FEND makes up a Camellia-encrypted datastream as specified above. This datastream decrypts to file data as described elsewhere in this document.
 
 It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the Camellia-encrypted datastream. There is not necessarily any correlation between FDAT chunk boundaries and block boundaries or any other feature of the Camellia-encrypted data. 
 

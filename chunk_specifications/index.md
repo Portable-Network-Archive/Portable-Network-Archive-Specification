@@ -103,8 +103,8 @@ Decoders should ignore them even if they contain a leading or trailing /.
 #### 4.1.5. PHSF Password hash
 
 The information about the key derivation function when encrypting a file.  
-This chunk appeared after `FHAD` chunk and before `FDAT` chunk.  
-If the value of encryption method field of `FHAD` chunk is not 0, this chunk is required.
+This chunk appeared after `FHED` chunk and before `FDAT` chunk.  
+If the value of the Encryption method field of `FHED` chunk is not 0, this chunk is required.
 
 |  size   | description       |
 |:-------:|:------------------|
@@ -154,7 +154,7 @@ All Auxiliary Chunks must appear before the `AEND` chunk.
 ##### 4.2.1.1 cTIM Created timestamp
 
 The creation datetime is recorded in Unix time.
-When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it indicates the creation datetime of the entry.
+When this chunk appears after the `FHED` chunk and before the `FEND` chunk, it indicates the creation datetime of the entry.
 
 |  size  | description    |
 |:------:|:---------------|
@@ -163,7 +163,7 @@ When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it i
 ##### 4.2.1.2 mTIM Modified timestamp
 
 The last modified datetime is recorded in Unix time.
-When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it indicates the last modified datetime of the entry.
+When this chunk appears after the `FHED` chunk and before the `FEND` chunk, it indicates the last modified datetime of the entry.
 
 |  size  | description    |
 |:------:|:---------------|
@@ -172,7 +172,7 @@ When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it i
 ##### 4.2.1.3 aTIM Accessed timestamp
 
 The last accessed datetime is recorded in Unix time.
-When this chunk appears after the `FHAD` chunk and before the `FEND` chunk, it indicates the last accessed datetime of the entry.
+When this chunk appears after the `FHED` chunk and before the `FEND` chunk, it indicates the last accessed datetime of the entry.
 
 |  size  | description    |
 |:------:|:---------------|
@@ -230,7 +230,7 @@ Valid values are in the range `0 <= value < 1,000,000,000`.
 ##### 4.2.2.1 fPRM File permission
 
 File permissions are recorded.
-This chunk appeared after `FHAD` chunk and before `FEND` chunk.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
 
 | significance |  size  | description           |
 |:-------------|:------:|:----------------------|
@@ -247,7 +247,7 @@ This chunk appeared after `FHAD` chunk and before `FEND` chunk.
 ##### 4.2.3.1 xATR Extended attribute
 
 An extended attribute are recorded.
-this chunk appeared after `FHAD` chunk and before `FEND` chunk. this chunk can appear many times.
+this chunk appeared after `FHED` chunk and before `FEND` chunk. this chunk can appear many times.
 
 | significance |  size  | description           |
 |:-------------|:------:|:----------------------|
