@@ -25,3 +25,28 @@ This document specifies the use of the Rijndael or Camellia cipher in CTR mode w
 CTR requires the encryptor to generate a unique per-packet value and communicate this value to the decryptor. This specification calls this per-packet value an initialization vector (IV).  The same IV and key combination MUST NOT be used more than once. The encryptor can generate the IV in any manner that ensures uniqueness. Common approaches to IV generation include incrementing a counter for each packet.
 
 More information on CTR mode can be obtained in [MODES](../references/index.md#modes)
+
+
+### 7.3. Initialization Vector (IV) Placement in Encrypted Streams
+
+When using an encryption mode that requires an Initialization Vector (IV), such as CBC (Cipher Block Chaining) or CTR (Counter Mode), PNA requires that the IV be prepended to the beginning of the encrypted datastream.
+
+#### 7.3.1 Placement
+
+For both per-entry (`FDAT`) and solid mode (`SDAT`) encrypted datastreams, the IV appears at the start of the stream. The IV is always 16 bytes in length, corresponding to the 128-bit block size used by both Rijndael (AES) and Camellia.
+
+The structure of an encrypted stream is:
+
+```
+[16-byte IV] + [ciphertext data...]
+```
+
+#### 7.3.2 Decoder Behavior
+
+A decoder must extract the first 16 bytes of the encrypted datastream as the Initialization Vector. The remainder of the datastream represents the ciphertext, which must be decrypted using the specified cipher algorithm and mode.
+
+#### 7.3.3 Encoder Behavior
+
+An encoder must generate a new, cryptographically secure random IV for each encrypted stream. The IV must be prepended to the encrypted datastream.
+
+Reuse of an IV with the same encryption key is prohibited and renders the archive cryptographically insecure.
