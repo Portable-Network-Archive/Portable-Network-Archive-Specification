@@ -160,6 +160,33 @@ Basic information of Solid mode archive is stored.
 Solid mode archive data.
 Contains chunks representing entries.
 
+#### 4.1.9.1 Structure of Entries in SDAT
+
+In solid mode archives, the `SDAT` chunk contains a continuous stream of data representing multiple entries.
+Unlike per-entry mode where each entry is composed of discrete `FHED` through `FEND` chunks within the archive, the `SDAT` chunk serializes these chunks together within its own data stream.
+
+The following structural rules apply to the contents of an `SDAT` chunk:
+
+- The `SDAT` chunk MUST contain a sequence of standard entry structures, each beginning with a `FHED` chunk and ending with a corresponding `FEND` chunk.
+- All chunks appearing within an `SDAT` chunk must conform to the same structure, layout, and constraints as defined for individual entries in per-entry mode.
+- Ancillary chunks (e.g., `cTIM`, `fPRM`, `xATR`) may appear between `FHED` and `FEND`, following the same rules as in regular entry mode.
+- Encryption and compression, if applied to the solid stream, are performed **after** the entire SDAT datastream has been composed.
+
+Each entry in solid mode is not stored as an independent top-level chunk sequence in the file but is instead **embedded** within the data field of the `SDAT` chunk.
+Decoders must parse the contents of `SDAT` as a logical concatenation of standard entry structures.
+
+The use of solid mode is intended to improve compression efficiency by processing similar files together as a single compression/encryption unit.
+
+**Example structure of SDAT content (conceptual):**
+
+```
+[ FHED | Ancillary* | FDAT* | FEND ]
+[ FHED | Ancillary* | FDAT* | FEND ]
+...
+```
+
+The outer `SDAT` chunk may be followed by additional `SDAT` chunks if the solid data stream is split. These must be interpreted as a single contiguous logical stream, terminated by the `SEND` chunk.
+
 ### 4.1.10. SEND Solid mode tailer
 
 This signals the end of the solid data stream.  
