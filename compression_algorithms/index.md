@@ -28,7 +28,7 @@ It is important to emphasize that the boundaries between FDAT chunks are arbitra
 
 In the same vein, there is no required correlation between the structure of the file data and deflate block boundaries or FDAT chunk boundaries. The complete entry data is represented by a single zlib datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
 
-PNA also uses zlib datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a zlib datastream as specified above.
+Treat all SDAT chunks between SHAD and SEND in the same way.
 
 Additional documentation and portable C code for deflate and inflate are available from the Info-ZIP archives at [ftp://ftp.info-zip.org/pub/infozip/](ftp://ftp.info-zip.org/pub/infozip/).
 
@@ -44,7 +44,7 @@ It is important to emphasize that the boundaries between FDAT chunks are arbitra
 
 In the same vein, there is no required correlation between the structure of the file data or FDAT chunk boundaries. The complete entry data is represented by a single ZStandard datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
 
-PNA also uses ZStandard datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a ZStandard datastream as specified above.
+Treat all SDAT chunks between SHAD and SEND in the same way.
 
 Additional documentation and Reference implementations of ZStandard are available from GitHub at [https://facebook.github.io/zstd/](https://facebook.github.io/zstd/) and [https://github.com/facebook/zstd](https://github.com/facebook/zstd)
 
@@ -63,6 +63,6 @@ It is important to emphasize that the boundaries between FDAT chunks are arbitra
 
 In the same vein, there is no required correlation between the structure of the file data or FDAT chunk boundaries. The complete entry data is represented by a single LZMA datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
 
-PNA also uses LZMA datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a LZMA datastream as specified above.
+Treat all SDAT chunks between SHAD and SEND in the same way.
 
 Additional documentation and Reference implementations of LZMA are available from GitHub at [https://github.com/tukaani-project/xz](https://github.com/tukaani-project/xz).

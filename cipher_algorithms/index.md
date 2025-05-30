@@ -16,7 +16,7 @@ It is important to emphasize that the boundaries between FDAT chunks are arbitra
 
 In the same vein, there is no required correlation between the structure of the file data and deflate block boundaries or FDAT chunk boundaries. The complete entry data is represented by a single Rijndael-encrypted datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
 
-PNA also uses Rijndael-encrypted datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a Rijndael-encrypted datastream as specified above.
+Treat all SDAT chunks between SHAD and SEND in the same way.
 
 Additional documentation is available from the Cryptographic Standards and Guidelines archives at [http://www.nist.gov/aes](http://www.nist.gov/aes) and the FIPS Publication 197 [FIPS-197](https://csrc.nist.gov/publications/detail/fips/197/final).
 
@@ -34,6 +34,6 @@ It is important to emphasize that the boundaries between FDAT chunks are arbitra
 
 In the same vein, there is no required correlation between the structure of the file data and deflate block boundaries or FDAT chunk boundaries. The complete entry data is represented by a single Camellia-encrypted datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
 
-PNA also uses Camellia-encrypted datastreams in SDAT chunks, where the remainder of the chunk following the compression method byte is a Camellia-encrypted datastream as specified above.
+Treat all SDAT chunks between SHAD and SEND in the same way.
 
 Additional documentation is available from the Camellia Specification at [RFC-3713](https://datatracker.ietf.org/doc/html/rfc3713).
