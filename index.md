@@ -38,6 +38,7 @@ PNA is robust, providing both full file integrity checking and simple detection 
     - [4.1.7. FEND File tailer](./chunk_specifications/index.md#417-fend-file-tailer)
     - [4.1.8. SHED Solid mode header](./chunk_specifications/index.md#418-shed-solid-mode-header)
     - [4.1.9. SDAT Solid mode data](./chunk_specifications/index.md#419-sdat-solid-mode-data)
+      - [4.1.9.1 Structure of Entries in SDAT](./chunk_specifications/index.md#4191-structure-of-entries-in-sdat)
     - [4.1.10. SEND Solid mode tailer](./chunk_specifications/index.md#4110-send-solid-mode-tailer)
   - [4.2. Ancillary chunks](./chunk_specifications/index.md#42-ancillary-chunks)
     - [4.2.1 Timestamp information](./chunk_specifications/index.md#421-timestamp-information)

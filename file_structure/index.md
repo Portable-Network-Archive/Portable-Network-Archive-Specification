@@ -65,6 +65,16 @@ A special entry is supported, a solid-mode-only entry that holds data that conca
 This entry is similar to a normal entries, but the data part records the data of concatenated the normal entry instead of the actual data of the entry.
 The chunks that make up this special entry have chunks dedicated to solid mode.
 
+The data part of this special entry is contained in one or more `SDAT` chunks and is conceptually a concatenated stream of multiple standard entries.
+Each of these embedded entries MUST follow the same structure as regular entries, consisting of `FHED`, optional ancillary chunks, `FDAT`, and `FEND`.
+
+Decoders must parse the content of `SDAT` as an ordered sequence of standard entries.
+
+Encryption or compression applied to the `SDAT` stream is applied as a whole after entry composition.
+
+In solid mode, multiple entries are represented as a concatenated stream within `SDAT`, each following the same layout structure (Header, Ancillary, Data, Tailer).
+The decoder must scan and identify each logical entry within the `SDAT` stream by parsing `FHED` to `FEND` boundaries.
+
 ### 3.5 Chunk layout
 
 Each chunk consists of four parts:
