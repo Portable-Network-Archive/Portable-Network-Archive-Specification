@@ -122,8 +122,8 @@ The `Compression method`, `Encryption method`, and `Cipher mode` fields in the F
 
 #### 4.1.5. PHSF Password hash
 
-The information about the key derivation function when encrypting a file.  
-This chunk appeared after `FHED` chunk and before `FDAT` chunk.  
+The PHSF chunk provides information about the password hashing algorithm and its parameters used in key derivation for encrypted entries.
+This chunk must appeared after `FHED` chunk and before `FDAT` chunk.  
 If the value of the Encryption method field of `FHED` chunk is not 0, this chunk is required.
 
 |  size   | description       |
