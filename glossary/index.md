@@ -36,17 +36,26 @@ A sequence of bytes. This term is used rather than "file" to describe a byte seq
 **Deflate**  
 The name of the compression algorithm used in standard PNG files, as well as in zip, gzip, pkzip, and other compression programs. Deflate is a member of the LZ77 family of compression methods.
 
+**Directory hard link**  
+A hard link whose target is a directory, represented in PNA by the combination of `FHED.Entry kind` = `3` (hard link) and `fLTP` = `2` (directory). This is the canonical PNA encoding for directory-target link semantics. Platform-native examples include Windows NTFS junctions. On file systems that prohibit directory hard links (e.g., POSIX-compliant systems), implementations may substitute a symbolic link to the target directory at extraction time.
+
 **Entry**  
 A logical unit within a PNA archive, representing a file, directory, symbolic link, hard link, or a reference to a previously stored file. Each entry is described by a header, optional ancillary information, data, and a tailer.
 
 **File signature**  
 A fixed 8-byte sequence at the beginning of every PNA file, used to identify the file as a PNA archive and detect file corruption or misidentification.
 
+**Hard link**  
+A directory entry that associates a name with an existing file by referencing the same underlying storage. Multiple hard links to the same file share the same inode on POSIX systems and are indistinguishable from each other. Hard links to directories are prohibited on most POSIX systems.
+
 **Initialization Vector (IV)**  
 A random or unique value used as the initial input for certain encryption modes (such as CBC and CTR) to ensure that identical plaintexts encrypt to different ciphertexts. The IV must never be reused with the same key.
 
 **Key derivation function (KDF)**  
 A cryptographic algorithm that derives one or more secret keys from a password or passphrase, often using a salt and multiple iterations to increase security against brute-force attacks.
+
+**Link target type**  
+A classification of the object referenced by a link entry, indicating whether the target is a file or a directory. Recorded in the `fLTP` ancillary chunk. Primarily used to distinguish file and directory symbolic links on file systems that require this information at link creation time.
 
 **Lossless compression**  
 Any method of data compression that guarantees the original data can be reconstructed exactly, bit-for-bit.
@@ -83,6 +92,9 @@ A storage mode in which multiple entries' data are concatenated and compressed/e
 
 **Split archive**  
 A PNA archive that is divided into multiple files for easier storage or transfer. Each part contains a portion of the archive, and the order is managed by the Archive number and file naming conventions (e.g., .part1.pna, .part2.pna).
+
+**Symbolic link**  
+A special file that contains a text reference to another file or directory, rather than the file contents themselves. Symbolic links are resolved at access time and can reference targets across file systems, may point to non-existent targets, and are distinct from hard links.
 
 **UTF-8**  
 A variable-width character encoding used for electronic communication, capable of encoding all possible Unicode code points. UTF-8 is the required encoding for all textual data in PNA files, including file paths.

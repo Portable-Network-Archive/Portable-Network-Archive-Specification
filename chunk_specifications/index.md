@@ -303,6 +303,38 @@ this chunk appeared after `FHED` chunk and before `FEND` chunk. this chunk can a
 | body length  | 4-byte | length of body        |
 | body         | n-byte | attribute value       |
 
+#### 4.2.4 Link target type
+
+##### 4.2.4.1 fLTP Link target type
+
+The link target type for link entries is recorded.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
+This chunk is meaningful only when the `Entry kind` field of the `FHED` chunk is `2` (symbolic link) or `3` (hard link).
+
+| significance     |  size  | description           |
+|:-----------------|:------:|:----------------------|
+| link target type | 1-byte | link target type code |
+
+##### Link target type code
+
+The link target type is recorded.
+0 is unknown (reserved for explicit unknown)
+1 is file
+2 is directory
+
+Values 3 through 63 are reserved for future public extensions.
+Values 64 through 255 are reserved for private extensions.
+
+##### Constraints
+
+- Encoders MAY write `fLTP` on entries whose `FHED.Entry kind` is not `2` (symbolic link) or `3` (hard link); decoders MUST ignore `fLTP` in such cases.
+
+##### Directory hard link
+
+When `FHED.Entry kind` is `3` (hard link) and the link target type is `2` (directory), the entry represents a **directory hard link** (see Glossary): a hard link whose target is a directory. This is the canonical PNA encoding for directory-target link semantics, and corresponds to platform-native constructs such as Windows NTFS junctions.
+
+On systems that cannot create hard links to directories (e.g., POSIX-compliant file systems that prohibit hardlink-to-directory), implementations MAY fall back to creating a symbolic link to the target directory when extracting such entries. This fallback is a local substitution at extraction time and does not modify the on-wire `FHED.Entry kind` or `fLTP` values.
+
 ### 4.3. Summary of standard chunks
 
 This table summarizes some properties of the standard chunk types.
@@ -334,6 +366,7 @@ Ancillary chunks
 | aTNS  |        Yes          |        No         |   Yes    | Must accompany `aTIM`, between `FHED`–`FEND` |
 | fPRM  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
 | xATR  |        Yes          |       Yes         |   Yes    | Between `FHED` and `FEND`                    |
+| fLTP  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
 
 ### 4.4. Additional chunk types
 
