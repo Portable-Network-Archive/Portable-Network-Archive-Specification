@@ -353,6 +353,204 @@ The chunk data consists of zero or more bytes representing the size as a big-end
 - Encoders MAY write `fSIZ` for any entry kind; for entries whose `FHED.Entry kind` is not `0` (regular file), the value has no defined semantics and decoders MUST ignore it.
 - `fSIZ` is informational. The value is a hint only. Decoders MUST NOT rely on it for buffer allocation, memory reservation, or security decisions, and MUST NOT require the reported size to match the actual size of the decompressed and decrypted entry data.
 
+#### 4.2.6 fACL ACL(Access Control List)
+
+ACLに関する情報が記録されます。
+ACLは先頭8byteの基本情報とACE(Access Control Entry)の繰り返しから構成されます。
+
+| significance |  size       | description                      |
+|:-------------|:-----------:|:---------------------------------|
+| Version      | 1-byte      | version of acl                   |
+| Reserved     | 1-byte      | currently not used               |
+| Platform     | 1-byte      | acl platform type                |
+| Acl type     | 1-byte      | type of acl                      |
+| Bit flags    | 2-byte      | currently not used               |
+| Entry count  | 2-byte      | number of access control entries |
+| Ace ...      | 16 + n-byte | repeat access control entries    |
+
+##### Platform
+
+0 is POSIX ACL (POSIX.1e)
+1 is Darwin ACL (POSIX.1e)
+2 is Windows ACL
+3 is NFSv4 ACL
+
+##### Acl type
+
+0 is Dacl
+
+##### Ace
+
+ACE(Access Control Entry)はentry countフィールドに記録された数の分繰り返し記録されます。
+
+| significance      |  size  | description                     |
+|:------------------|:------:|:--------------------------------|
+| Ace type          | 1-byte | ace type                        |
+| Reserved          | 5-byte | currently not used              |
+| Permissions       | 4-byte | ace permissions bit             |
+| Ace flag          | 4-byte | ace bit flag                    |
+| Identifier length | 2-byte | length of identifier in byte    |
+| Identifier        | n-byte | ace identifier                  |
+
+##### Ace type
+
+Ace typeフィールドはPlatformフィールドの値によって解釈の仕方が変わります。
+
+###### Darwin ACL (POSIX.1e)
+
+// Darwin ACL: sys/acl.h (macOS SDK, MacOSX15.4.sdk)
+const DARWIN_ACL_EXTENDED_ALLOW = 0x01;  
+const DARWIN_ACL_EXTENDED_DENY  = 0x02;  
+
+###### Windows ACL
+
+// Windows ACE type: MS-DTYP 2.4.4.1 ACE_HEADER
+const WINDOWS_ACCESS_ALLOWED_ACE_TYPE               = 0x00;  
+const WINDOWS_ACCESS_DENIED_ACE_TYPE                = 0x01;  
+const WINDOWS_SYSTEM_AUDIT_ACE_TYPE                 = 0x02;  
+const WINDOWS_SYSTEM_ALARM_ACE_TYPE                 = 0x03;  
+const WINDOWS_ACCESS_ALLOWED_COMPOUND_ACE_TYPE      = 0x04;  
+const WINDOWS_ACCESS_ALLOWED_OBJECT_ACE_TYPE        = 0x05;  
+const WINDOWS_ACCESS_DENIED_OBJECT_ACE_TYPE         = 0x06;  
+const WINDOWS_SYSTEM_AUDIT_OBJECT_ACE_TYPE          = 0x07;  
+const WINDOWS_SYSTEM_ALARM_OBJECT_ACE_TYPE          = 0x08;  
+const WINDOWS_ACCESS_ALLOWED_CALLBACK_ACE_TYPE      = 0x09;  
+const WINDOWS_ACCESS_DENIED_CALLBACK_ACE_TYPE       = 0x0A;  
+const WINDOWS_ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE = 0x0B;  
+const WINDOWS_ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  = 0x0C;  
+const WINDOWS_SYSTEM_AUDIT_CALLBACK_ACE_TYPE        = 0x0D;  
+const WINDOWS_SYSTEM_ALARM_CALLBACK_ACE_TYPE        = 0x0E;  
+const WINDOWS_SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE = 0x0F;  
+const WINDOWS_SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE = 0x10;  
+const WINDOWS_SYSTEM_MANDATORY_LABEL_ACE_TYPE       = 0x11;  
+const WINDOWS_SYSTEM_RESOURCE_ATTRIBUTE_ACE_TYPE    = 0x12;  
+const WINDOWS_SYSTEM_SCOPED_POLICY_ID_ACE_TYPE      = 0x13;  
+
+###### NFSv4 ACL
+
+// NFSv4 ACE type: RFC 5661 6.2.1.1
+const NFSv4_ACCESS_ALLOWED_ACE_TYPE = 0x00000000;  
+const NFSv4_ACCESS_DENIED_ACE_TYPE  = 0x00000001;  
+const NFSv4_SYSTEM_AUDIT_ACE_TYPE   = 0x00000002;  
+const NFSv4_SYSTEM_ALARM_ACE_TYPE   = 0x00000003;  
+
+##### Permissions
+
+PermissionsフィールドはPlatformフィールドの値によって解釈の仕方が変わります。
+
+###### POSIX ACL (POSIX.1e)
+
+const POSIX_READ    = 0x004;  
+const POSIX_WRITE   = 0x002;  
+const POSIX_EXECUTE = 0x001;  
+
+###### Darwin ACL (POSIX.1e)
+
+// Darwin ACL: sys/acl.h (macOS SDK, MacOSX15.4.sdk)
+const DARWIN_READ_DATA           = 0x00000002;  
+const DARWIN_LIST_DIRECTORY      = 0x00000002;  
+const DARWIN_WRITE_DATA          = 0x00000004;  
+const DARWIN_ADD_FILE            = 0x00000004;  
+const DARWIN_EXECUTE             = 0x00000008;  
+const DARWIN_SEARCH              = 0x00000008;  
+const DARWIN_DELETE              = 0x00000010;  
+const DARWIN_APPEND_DATA         = 0x00000020;  
+const DARWIN_ADD_SUBDIRECTORY    = 0x00000020;  
+const DARWIN_DELETE_CHILD        = 0x00000040;  
+const DARWIN_READ_ATTRIBUTES     = 0x00000080;  
+const DARWIN_WRITE_ATTRIBUTES    = 0x00000100;  
+const DARWIN_READ_EXTATTRIBUTES  = 0x00000200;  
+const DARWIN_WRITE_EXTATTRIBUTES = 0x00000400;  
+const DARWIN_READ_SECURITY       = 0x00000800;  
+const DARWIN_WRITE_SECURITY      = 0x00001000;  
+const DARWIN_CHANGE_OWNER        = 0x00002000;  
+const DARWIN_SYNCHRONIZE         = 0x00100000;  
+
+###### Windows ACL
+
+// Windows access mask: MS-DTYP 2.4.3 ACCESS_MASK
+const WINDOWS_READ_DATA            = 0x00000001;  
+const WINDOWS_LIST_DIRECTORY       = 0x00000001;  
+const WINDOWS_WRITE_DATA           = 0x00000002;  
+const WINDOWS_ADD_FILE             = 0x00000002;  
+const WINDOWS_APPEND_DATA          = 0x00000004;  
+const WINDOWS_ADD_SUBDIRECTORY     = 0x00000004;  
+const WINDOWS_READ_NAMED_ATTRS     = 0x00000008;  
+const WINDOWS_WRITE_NAMED_ATTRS    = 0x00000010;  
+const WINDOWS_EXECUTE              = 0x00000020;  
+const WINDOWS_DELETE_CHILD         = 0x00000040;  
+const WINDOWS_READ_ATTRIBUTES      = 0x00000080;  
+const WINDOWS_WRITE_ATTRIBUTES     = 0x00000100;  
+const WINDOWS_DELETE               = 0x00010000;  
+const WINDOWS_READ_ACL             = 0x00020000;  
+const WINDOWS_WRITE_ACL            = 0x00040000;  
+const WINDOWS_WRITE_OWNER          = 0x00080000;  
+const WINDOWS_SYNCHRONIZE          = 0x00100000;  
+
+
+###### NFSv4 ACL
+
+// NFSv4 ACL: https://datatracker.ietf.org/doc/html/rfc7530
+//            https://datatracker.ietf.org/doc/html/rfc5661
+
+const NFSv4_READ_DATA            = 0x00000001;  
+const NFSv4_LIST_DIRECTORY       = 0x00000001;  
+const NFSv4_WRITE_DATA           = 0x00000002;  
+const NFSv4_ADD_FILE             = 0x00000002;  
+const NFSv4_APPEND_DATA          = 0x00000004;  
+const NFSv4_ADD_SUBDIRECTORY     = 0x00000004;  
+const NFSv4_READ_NAMED_ATTRS     = 0x00000008;  
+const NFSv4_WRITE_NAMED_ATTRS    = 0x00000010;  
+const NFSv4_EXECUTE              = 0x00000020;  
+const NFSv4_DELETE_CHILD         = 0x00000040;  
+const NFSv4_READ_ATTRIBUTES      = 0x00000080;  
+const NFSv4_WRITE_ATTRIBUTES     = 0x00000100;  
+const NFSv4_WRITE_RETENTION      = 0x00000200;  
+const NFSv4_WRITE_RETENTION_HOLD = 0x00000400;  
+const NFSv4_DELETE               = 0x00010000;  
+const NFSv4_READ_ACL             = 0x00020000;  
+const NFSv4_WRITE_ACL            = 0x00040000;  
+const NFSv4_WRITE_OWNER          = 0x00080000;  
+const NFSv4_SYNCHRONIZE          = 0x00100000;  
+
+##### Ace flag
+
+Ace flagフィールドはPlatformフィールドの値によって解釈の仕方が変わります。
+
+###### Darwin ACL (POSIX.1e)
+
+// Darwin ACL: sys/acl.h (macOS SDK, MacOSX15.4.sdk)
+const DARWIN_ACL_FLAG_DEFER_INHERIT      = 0x00000001;  
+const DARWIN_ACL_FLAG_NO_INHERIT         = 0x00020000;  
+const DARWIN_ACL_ENTRY_INHERITED         = 0x00000010;  
+const DARWIN_ACL_ENTRY_FILE_INHERIT      = 0x00000020;  
+const DARWIN_ACL_ENTRY_DIRECTORY_INHERIT = 0x00000040;  
+const DARWIN_ACL_ENTRY_LIMIT_INHERIT     = 0x00000080;  
+const DARWIN_ACL_ENTRY_ONLY_INHERIT      = 0x00000100;  
+
+###### Windows ACL
+
+// Windows ACE flags: MS-DTYP 2.4.4.1 ACE_HEADER
+const WINDOWS_OBJECT_INHERIT_ACE        = 0x01;  
+const WINDOWS_CONTAINER_INHERIT_ACE     = 0x02;  
+const WINDOWS_NO_PROPAGATE_INHERIT_ACE  = 0x04;  
+const WINDOWS_INHERIT_ONLY_ACE          = 0x08;  
+const WINDOWS_INHERITED_ACE             = 0x10;  
+const WINDOWS_SUCCESSFUL_ACCESS_ACE_FLAG = 0x40;  
+const WINDOWS_FAILED_ACCESS_ACE_FLAG    = 0x80;  
+
+###### NFSv4 ACL
+
+// NFSv4 ACE flag: RFC 5661 6.2.1.4
+const NFSv4_FILE_INHERIT_ACE           = 0x00000001;  
+const NFSv4_DIRECTORY_INHERIT_ACE      = 0x00000002;  
+const NFSv4_NO_PROPAGATE_INHERIT_ACE   = 0x00000004;  
+const NFSv4_INHERIT_ONLY_ACE           = 0x00000008;  
+const NFSv4_SUCCESSFUL_ACCESS_ACE_FLAG = 0x00000010;  
+const NFSv4_FAILED_ACCESS_ACE_FLAG     = 0x00000020;  
+const NFSv4_IDENTIFIER_GROUP           = 0x00000040;  
+const NFSv4_INHERITED_ACE              = 0x00000080;  
+
 ### 4.3. Summary of standard chunks
 
 This table summarizes some properties of the standard chunk types.
@@ -386,6 +584,7 @@ Ancillary chunks
 | xATR  |        Yes          |       Yes         |   Yes    | Between `FHED` and `FEND`                    |
 | fLTP  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
 | fSIZ  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| fACL  |        Yes          |       Yes         |   Yes    | Between `FHED` and `FEND`                    |
 
 ### 4.4. Additional chunk types
 
