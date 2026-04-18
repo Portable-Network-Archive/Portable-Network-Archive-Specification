@@ -2,6 +2,19 @@
 
 PNA allows the use of multiple compression algorithms. This is designed to achieve high performance by switching compression algorithms depending on the intended use and environment.
 
+### Method code mapping
+
+In this chapter, "PNA compression method N" refers to the **slot index** in the registry below. Encoders MUST write the corresponding **FHED value**, not the slot index, into the `Compression method` field of the FHED chunk.
+
+| Slot (used in this chapter) | FHED `Compression method` value | Algorithm      | Section               |
+|----------------------------:|:-------------------------------:|:---------------|:----------------------|
+| —                           | 0                               | No compression | —                     |
+| 0                           | 1                               | Deflate        | [§5.1](#51-deflate)   |
+| 1                           | 2                               | ZStandard      | [§5.2](#52-zstandard) |
+| 2                           | 4                               | LZMA           | [§5.3](#53-lzma)      |
+
+See also [§4.1.4](../chunk_specifications/index.md#414-fhed-file-header) for the full list of FHED field values.
+
 ### 5.1. Deflate
 
 PNA compression method 0 specifies deflate/inflate compression with a sliding window of at most 32768 bytes. Deflate compression is an LZ77 derivative used in zip, gzip, pkzip, and related programs. Extensive research has been done supporting its patent-free status. Portable C implementations are freely available.

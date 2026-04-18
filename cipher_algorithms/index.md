@@ -2,6 +2,18 @@
 
 PNA employs multiple cipher algorithms. This specification is designed to ensure the secure use of PNA by enabling the selection of alternative cipher algorithms in the event of a critical flaw discovered in a specific algorithm. In this chapter, we will define the cipher algorithms available for use in PNA. For information on cipher mode, please refer to the following chapter.
 
+### Method code mapping
+
+In this chapter, "PNA cipher method N" refers to the **slot index** in the registry below. Encoders MUST write the corresponding **FHED value**, not the slot index, into the `Encryption method` field of the FHED chunk.
+
+| Slot (used in this chapter) | FHED `Encryption method` value | Algorithm      | Section              |
+|----------------------------:|:------------------------------:|:---------------|:---------------------|
+| —                           | 0                              | No encryption  | —                    |
+| 0                           | 1                              | Rijndael (AES) | [§6.1](#61-rijndael) |
+| 1                           | 2                              | Camellia       | [§6.2](#62-camellia) |
+
+See also [§4.1.4](../chunk_specifications/index.md#414-fhed-file-header) for the full list of FHED field values.
+
 ### 6.1 Rijndael
 
 PNA cipher method 0 specifies Rijndael encryption with a key length of 256 bits and a block length of 128 bits. Rijndael, generally known as AES(Advanced Encryption Standard), is a widely accepted symmetric encryption algorithm renowned for its security and efficiency. It operates on blocks of data and supports key sizes of 128, 192, and 256 bits. In PNA, Rijndael with a key length of 256 bits is utilized. This provides a high level of encryption strength, ensuring that the archived data remains secure against unauthorized access.

@@ -104,17 +104,17 @@ Decoders should ignore them even if they contain a leading or trailing /.
 
 The `Compression method`, `Encryption method`, and `Cipher mode` fields in the FHED chunk must be set to the following PNA method codes (integer values):
 
-| Field               | Value | Algorithm/Mode        | Note                       |
-|:--------------------|------:|:----------------------|:---------------------------|
-| Compression method  | 0     | No compression        |                            |
-|                     | 1     | Deflate               | zlib compatible            |
-|                     | 2     | Zstandard             |                            |
-|                     | 4     | LZMA                  | xz                         |
-| Encryption method   | 0     | No encryption         |                            |
-|                     | 1     | AES (Rijndael)        | 256-bit key                |
-|                     | 2     | Camellia              | 256-bit key                |
-| Cipher mode         | 0     | CBC                   | Cipher Block Chaining      |
-|                     | 1     | CTR                   | Counter Mode               |
+| Field               | Value | Algorithm/Mode        | Note                       | Defined in                                                         |
+|:--------------------|------:|:----------------------|:---------------------------|:-------------------------------------------------------------------|
+| Compression method  | 0     | No compression        |                            |                                                                    |
+|                     | 1     | Deflate               | zlib compatible            | [§5.1](../compression_algorithms/index.md#51-deflate)              |
+|                     | 2     | Zstandard             |                            | [§5.2](../compression_algorithms/index.md#52-zstandard)            |
+|                     | 4     | LZMA                  | xz                         | [§5.3](../compression_algorithms/index.md#53-lzma)                 |
+| Encryption method   | 0     | No encryption         |                            |                                                                    |
+|                     | 1     | AES (Rijndael)        | 256-bit key                | [§6.1](../cipher_algorithms/index.md#61-rijndael)                  |
+|                     | 2     | Camellia              | 256-bit key                | [§6.2](../cipher_algorithms/index.md#62-camellia)                  |
+| Cipher mode         | 0     | CBC                   | Cipher Block Chaining      | [§7.1](../cipher_modes/index.md#71-cipher-block-chaining-mode-cbc) |
+|                     | 1     | CTR                   | Counter Mode               | [§7.2](../cipher_modes/index.md#72-counter-mode-ctr)               |
 
 **Note:**
 - Do not use algorithm-internal method codes (such as zlib's method/flags code) in these fields. Only the PNA method code (integer value) must be stored in the FHED chunk fields.
