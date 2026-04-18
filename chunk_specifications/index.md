@@ -335,6 +335,24 @@ When `FHED.Entry kind` is `3` (hard link) and the link target type is `2` (direc
 
 On systems that cannot create hard links to directories (e.g., POSIX-compliant file systems that prohibit hardlink-to-directory), implementations MAY fall back to creating a symbolic link to the target directory when extracting such entries. This fallback is a local substitution at extraction time and does not modify the on-wire `FHED.Entry kind` or `fLTP` values.
 
+#### 4.2.5 Raw file size hint
+
+##### 4.2.5.1 fSIZ Raw file size hint
+
+A hint of the byte count of the source file, prior to any compression or encryption, is recorded.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
+
+| significance |  size   | description                 |
+|:-------------|:-------:|:----------------------------|
+| size         | n-byte  | Big-endian unsigned integer |
+
+The chunk data consists of zero or more bytes representing the size as a big-endian unsigned integer. Decoders MUST interpret a zero-length chunk data as a size of zero.
+
+##### Constraints
+
+- Encoders MAY write `fSIZ` for any entry kind; for entries whose `FHED.Entry kind` is not `0` (regular file), the value has no defined semantics and decoders MUST ignore it.
+- `fSIZ` is informational. The value is a hint only. Decoders MUST NOT rely on it for buffer allocation, memory reservation, or security decisions, and MUST NOT require the reported size to match the actual size of the decompressed and decrypted entry data.
+
 ### 4.3. Summary of standard chunks
 
 This table summarizes some properties of the standard chunk types.
@@ -367,6 +385,7 @@ Ancillary chunks
 | fPRM  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
 | xATR  |        Yes          |       Yes         |   Yes    | Between `FHED` and `FEND`                    |
 | fLTP  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| fSIZ  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
 
 ### 4.4. Additional chunk types
 
