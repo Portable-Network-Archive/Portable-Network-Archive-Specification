@@ -54,6 +54,8 @@ PNA is robust, providing both full file integrity checking and simple detection 
       - [4.2.3.1 xATR Extended attribute](./chunk_specifications/index.md#4231-xatr-extended-attribute)
     - [4.2.4 Link target type](./chunk_specifications/index.md#424-link-target-type)
       - [4.2.4.1 fLTP Link target type](./chunk_specifications/index.md#4241-fltp-link-target-type)
+    - [4.2.5 Raw file size hint](./chunk_specifications/index.md#425-raw-file-size-hint)
+      - [4.2.5.1 fSIZ Raw file size hint](./chunk_specifications/index.md#4251-fsiz-raw-file-size-hint)
   - [4.3. Summary of standard chunks](./chunk_specifications/index.md#43-summary-of-standard-chunks)
   - [4.4. Additional chunk types](./chunk_specifications/index.md#44-additional-chunk-types)
 - [5. Compression algorithms](./compression_algorithms/index.md)
