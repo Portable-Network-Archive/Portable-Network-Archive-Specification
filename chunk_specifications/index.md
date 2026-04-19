@@ -417,7 +417,7 @@ const WINDOWS_ACL_DEFAULTED      = 0x0004;
 
 ###### NFSv4 DACL
 
-The `Bit flags` field encodes `aclflag4` per RFC 5661 §6.4.2.1:
+The `Bit flags` field encodes `aclflag4` per RFC 5661 §6.4.3.2:
 
 const NFSv4_ACL_AUTO_INHERIT = 0x0001;  
 const NFSv4_ACL_PROTECTED    = 0x0002;  
@@ -479,20 +479,20 @@ const DARWIN_ACL_EXTENDED_DENY  = 0x02;
 const WINDOWS_ACCESS_ALLOWED_ACE_TYPE                 = 0x00;  
 const WINDOWS_ACCESS_DENIED_ACE_TYPE                  = 0x01;  
 const WINDOWS_SYSTEM_AUDIT_ACE_TYPE                   = 0x02;  
-const WINDOWS_SYSTEM_ALARM_ACE_TYPE                   = 0x03;  
-const WINDOWS_ACCESS_ALLOWED_COMPOUND_ACE_TYPE        = 0x04;  
+const WINDOWS_SYSTEM_ALARM_ACE_TYPE                   = 0x03;  // Reserved for future use per MS-DTYP §2.4.4.1  
+const WINDOWS_ACCESS_ALLOWED_COMPOUND_ACE_TYPE        = 0x04;  // Reserved for future use per MS-DTYP §2.4.4.1  
 const WINDOWS_ACCESS_ALLOWED_OBJECT_ACE_TYPE          = 0x05;  
 const WINDOWS_ACCESS_DENIED_OBJECT_ACE_TYPE           = 0x06;  
 const WINDOWS_SYSTEM_AUDIT_OBJECT_ACE_TYPE            = 0x07;  
-const WINDOWS_SYSTEM_ALARM_OBJECT_ACE_TYPE            = 0x08;  
+const WINDOWS_SYSTEM_ALARM_OBJECT_ACE_TYPE            = 0x08;  // Reserved for future use per MS-DTYP §2.4.4.1  
 const WINDOWS_ACCESS_ALLOWED_CALLBACK_ACE_TYPE        = 0x09;  
 const WINDOWS_ACCESS_DENIED_CALLBACK_ACE_TYPE         = 0x0A;  
 const WINDOWS_ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE = 0x0B;  
 const WINDOWS_ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  = 0x0C;  
 const WINDOWS_SYSTEM_AUDIT_CALLBACK_ACE_TYPE          = 0x0D;  
-const WINDOWS_SYSTEM_ALARM_CALLBACK_ACE_TYPE          = 0x0E;  
+const WINDOWS_SYSTEM_ALARM_CALLBACK_ACE_TYPE          = 0x0E;  // Reserved for future use per MS-DTYP §2.4.4.1  
 const WINDOWS_SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE   = 0x0F;  
-const WINDOWS_SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   = 0x10;  
+const WINDOWS_SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   = 0x10;  // Reserved for future use per MS-DTYP §2.4.4.1  
 const WINDOWS_SYSTEM_MANDATORY_LABEL_ACE_TYPE         = 0x11;  
 const WINDOWS_SYSTEM_RESOURCE_ATTRIBUTE_ACE_TYPE      = 0x12;  
 const WINDOWS_SYSTEM_SCOPED_POLICY_ID_ACE_TYPE        = 0x13;  
@@ -611,8 +611,8 @@ const WINDOWS_CONTAINER_INHERIT_ACE      = 0x02;
 const WINDOWS_NO_PROPAGATE_INHERIT_ACE   = 0x04;  
 const WINDOWS_INHERIT_ONLY_ACE           = 0x08;  
 const WINDOWS_INHERITED_ACE              = 0x10;  
-const WINDOWS_SUCCESSFUL_ACCESS_ACE_FLAG = 0x40;  
-const WINDOWS_FAILED_ACCESS_ACE_FLAG     = 0x80;  
+const WINDOWS_SUCCESSFUL_ACCESS_ACE_FLAG = 0x40;  // SACL-only: valid only in audit ACE types (Acl type = 1)  
+const WINDOWS_FAILED_ACCESS_ACE_FLAG     = 0x80;  // SACL-only: valid only in audit ACE types (Acl type = 1)  
 
 ###### NFSv4 DACL
 
