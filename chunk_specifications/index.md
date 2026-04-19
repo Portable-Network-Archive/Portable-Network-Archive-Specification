@@ -353,98 +353,172 @@ The chunk data consists of zero or more bytes representing the size as a big-end
 - Encoders MAY write `fSIZ` for any entry kind; for entries whose `FHED.Entry kind` is not `0` (regular file), the value has no defined semantics and decoders MUST ignore it.
 - `fSIZ` is informational. The value is a hint only. Decoders MUST NOT rely on it for buffer allocation, memory reservation, or security decisions, and MUST NOT require the reported size to match the actual size of the decompressed and decrypted entry data.
 
-#### 4.2.6 fACL ACL(Access Control List)
+#### 4.2.6 fACL Access Control List
 
-ACLに関する情報が記録されます。
-ACLは先頭8byteの基本情報とACE(Access Control Entry)の繰り返しから構成されます。
+Access Control List (ACL) information is recorded.
+An `fACL` chunk consists of an 8-byte header followed by a sequence of Access Control Entries (ACEs). Values in the `Ace type`, `Permissions`, `Ace flag`, and `Bit flags` fields are interpreted according to the `Platform` field; decoders MUST read `Platform` before interpreting those fields.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
 
-| significance |  size       | description                      |
-|:-------------|:-----------:|:---------------------------------|
-| Version      | 1-byte      | version of acl                   |
-| Reserved     | 1-byte      | currently not used               |
-| Platform     | 1-byte      | acl platform type                |
-| Acl type     | 1-byte      | type of acl                      |
-| Bit flags    | 2-byte      | currently not used               |
-| Entry count  | 2-byte      | number of access control entries |
-| Ace ...      | 16 + n-byte | repeat access control entries    |
+| significance |  size       | description                           |
+|:-------------|:-----------:|:--------------------------------------|
+| Version      | 1-byte      | fACL schema version                   |
+| Reserved     | 1-byte      | reserved, MUST be 0                   |
+| Platform     | 1-byte      | acl platform type                     |
+| Acl type     | 1-byte      | type of acl                           |
+| Bit flags    | 2-byte      | platform-dependent ACL-level flags    |
+| Entry count  | 2-byte      | number of access control entries      |
+| Ace ...      | variable    | repeat access control entries         |
+
+##### Version
+
+Encoders conforming to this specification MUST set `Version` to `0`.
+Decoders MUST reject `fACL` chunks with an unknown `Version` value, because the interpretation of subsequent fields may change in future schema versions.
 
 ##### Platform
 
-0 is POSIX ACL (POSIX.1e)
-1 is Darwin ACL (POSIX.1e)
-2 is Windows ACL
-3 is NFSv4 ACL
+0 is POSIX.1e (classic)
+1 is Darwin extended
+2 is Windows DACL
+3 is NFSv4 DACL
+
+Values 4 through 63 are reserved for future public extensions.
+Values 64 through 255 are reserved for private extensions.
 
 ##### Acl type
 
-0 is Dacl
+0 is primary ACL (Windows DACL / POSIX.1e primary / Darwin / NFSv4)
+1 is SACL (Windows audit ACL)
+2 is POSIX.1e default ACL
+
+Values 3 through 63 are reserved for future public extensions.
+Values 64 through 255 are reserved for private extensions.
+
+Multiple `fACL` chunks MAY appear in the same entry to represent different ACL objects (for example, a Windows DACL and SACL pair, or a POSIX.1e primary and default ACL pair). Each `fACL` chunk represents exactly one ACL object.
+
+##### Bit flags
+
+The `Bit flags` field holds ACL-level flags whose interpretation depends on `Platform`. Undefined bits are reserved; encoders MUST set undefined bits to 0, and decoders MUST ignore them.
+
+###### POSIX.1e (classic)
+
+All bits reserved. Encoders MUST set the field to 0.
+
+###### Darwin extended
+
+All bits reserved. Encoders MUST set the field to 0.
+
+###### Windows DACL
+
+For `Acl type` 0 (DACL) or 1 (SACL), the `Bit flags` field encodes the ACL-applicable subset of `SECURITY_DESCRIPTOR.Control` per MS-DTYP §2.4.6:
+
+const WINDOWS_ACL_PROTECTED      = 0x0001;  
+const WINDOWS_ACL_AUTO_INHERITED = 0x0002;  
+const WINDOWS_ACL_DEFAULTED      = 0x0004;  
+
+###### NFSv4 DACL
+
+The `Bit flags` field encodes `aclflag4` per RFC 5661 §6.4.2.1:
+
+const NFSv4_ACL_AUTO_INHERIT = 0x0001;  
+const NFSv4_ACL_PROTECTED    = 0x0002;  
+const NFSv4_ACL_DEFAULTED    = 0x0004;  
+
+##### Entry count
+
+`Entry count` is a big-endian unsigned 16-bit integer. A value of 0 indicates an empty ACL.
 
 ##### Ace
 
-ACE(Access Control Entry)はentry countフィールドに記録された数の分繰り返し記録されます。
+The Ace (Access Control Entry) structure is repeated `Entry count` times.
 
-| significance      |  size  | description                     |
-|:------------------|:------:|:--------------------------------|
-| Ace type          | 1-byte | ace type                        |
-| Reserved          | 5-byte | currently not used              |
-| Permissions       | 4-byte | ace permissions bit             |
-| Ace flag          | 4-byte | ace bit flag                    |
-| Identifier length | 2-byte | length of identifier in byte    |
-| Identifier        | n-byte | ace identifier                  |
+| significance      |  size    | description                           |
+|:------------------|:--------:|:--------------------------------------|
+| Ace type          | 1-byte   | platform-dependent ace type code      |
+| Reserved          | 5-byte   | reserved, MUST be 0                   |
+| Permissions       | 4-byte   | platform-dependent permission bits    |
+| Ace flag          | 4-byte   | platform-dependent ACE flag bits      |
+| Name length       | 2-byte   | byte length of Name (0 if absent)     |
+| Name              | n-byte   | UTF-8 portable trustee identifier     |
+| Native length     | 2-byte   | byte length of Native (0 if absent)   |
+| Native            | m-byte   | platform-native trustee identifier    |
+| Extension length  | 4-byte   | byte length of Extension (0 if none)  |
+| Extension data    | k-byte   | ace-type-specific trailer             |
+
+The `Name` field holds a UTF-8 trustee identifier portable across platforms (for example, a user or group name). The `Native` field holds the platform-authoritative trustee representation (see Identifier per Platform below). At least one of `Name` or `Native` MUST be populated unless the Ace type context implies no trustee (for example, POSIX.1e `USER_OBJ`, `GROUP_OBJ`, `MASK`, or `OTHER`).
+
+Encoders SHOULD populate both `Name` and `Native` when both are resolvable. If a decoder cannot simultaneously honor both on the target platform, it SHOULD resolve the trustee from `Name`.
 
 ##### Ace type
 
-Ace typeフィールドはPlatformフィールドの値によって解釈の仕方が変わります。
+The interpretation of the `Ace type` field depends on `Platform`.
 
-###### Darwin ACL (POSIX.1e)
+###### POSIX.1e (classic)
+
+// POSIX.1e classic ACL semantic tags.
+// Numeric values are defined by this specification rather than
+// transcribed from a specific implementation, because Linux and
+// FreeBSD use non-uniform acl_tag_t encodings.
+const POSIX_CLASSIC_USER_OBJ  = 0x00;  
+const POSIX_CLASSIC_USER      = 0x01;  
+const POSIX_CLASSIC_GROUP_OBJ = 0x02;  
+const POSIX_CLASSIC_GROUP     = 0x03;  
+const POSIX_CLASSIC_MASK      = 0x04;  
+const POSIX_CLASSIC_OTHER     = 0x05;  
+
+For `USER_OBJ`, `GROUP_OBJ`, `MASK`, and `OTHER`, `Name length` and `Native length` MUST both be 0.
+
+###### Darwin extended
 
 // Darwin ACL: sys/acl.h (macOS SDK, MacOSX15.4.sdk)
 const DARWIN_ACL_EXTENDED_ALLOW = 0x01;  
 const DARWIN_ACL_EXTENDED_DENY  = 0x02;  
 
-###### Windows ACL
+###### Windows DACL
 
-// Windows ACE type: MS-DTYP 2.4.4.1 ACE_HEADER
-const WINDOWS_ACCESS_ALLOWED_ACE_TYPE               = 0x00;  
-const WINDOWS_ACCESS_DENIED_ACE_TYPE                = 0x01;  
-const WINDOWS_SYSTEM_AUDIT_ACE_TYPE                 = 0x02;  
-const WINDOWS_SYSTEM_ALARM_ACE_TYPE                 = 0x03;  
-const WINDOWS_ACCESS_ALLOWED_COMPOUND_ACE_TYPE      = 0x04;  
-const WINDOWS_ACCESS_ALLOWED_OBJECT_ACE_TYPE        = 0x05;  
-const WINDOWS_ACCESS_DENIED_OBJECT_ACE_TYPE         = 0x06;  
-const WINDOWS_SYSTEM_AUDIT_OBJECT_ACE_TYPE          = 0x07;  
-const WINDOWS_SYSTEM_ALARM_OBJECT_ACE_TYPE          = 0x08;  
-const WINDOWS_ACCESS_ALLOWED_CALLBACK_ACE_TYPE      = 0x09;  
-const WINDOWS_ACCESS_DENIED_CALLBACK_ACE_TYPE       = 0x0A;  
+// Windows ACE type: MS-DTYP §2.4.4.1 ACE_HEADER
+const WINDOWS_ACCESS_ALLOWED_ACE_TYPE                 = 0x00;  
+const WINDOWS_ACCESS_DENIED_ACE_TYPE                  = 0x01;  
+const WINDOWS_SYSTEM_AUDIT_ACE_TYPE                   = 0x02;  
+const WINDOWS_SYSTEM_ALARM_ACE_TYPE                   = 0x03;  
+const WINDOWS_ACCESS_ALLOWED_COMPOUND_ACE_TYPE        = 0x04;  
+const WINDOWS_ACCESS_ALLOWED_OBJECT_ACE_TYPE          = 0x05;  
+const WINDOWS_ACCESS_DENIED_OBJECT_ACE_TYPE           = 0x06;  
+const WINDOWS_SYSTEM_AUDIT_OBJECT_ACE_TYPE            = 0x07;  
+const WINDOWS_SYSTEM_ALARM_OBJECT_ACE_TYPE            = 0x08;  
+const WINDOWS_ACCESS_ALLOWED_CALLBACK_ACE_TYPE        = 0x09;  
+const WINDOWS_ACCESS_DENIED_CALLBACK_ACE_TYPE         = 0x0A;  
 const WINDOWS_ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE = 0x0B;  
 const WINDOWS_ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  = 0x0C;  
-const WINDOWS_SYSTEM_AUDIT_CALLBACK_ACE_TYPE        = 0x0D;  
-const WINDOWS_SYSTEM_ALARM_CALLBACK_ACE_TYPE        = 0x0E;  
-const WINDOWS_SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE = 0x0F;  
-const WINDOWS_SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE = 0x10;  
-const WINDOWS_SYSTEM_MANDATORY_LABEL_ACE_TYPE       = 0x11;  
-const WINDOWS_SYSTEM_RESOURCE_ATTRIBUTE_ACE_TYPE    = 0x12;  
-const WINDOWS_SYSTEM_SCOPED_POLICY_ID_ACE_TYPE      = 0x13;  
+const WINDOWS_SYSTEM_AUDIT_CALLBACK_ACE_TYPE          = 0x0D;  
+const WINDOWS_SYSTEM_ALARM_CALLBACK_ACE_TYPE          = 0x0E;  
+const WINDOWS_SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE   = 0x0F;  
+const WINDOWS_SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   = 0x10;  
+const WINDOWS_SYSTEM_MANDATORY_LABEL_ACE_TYPE         = 0x11;  
+const WINDOWS_SYSTEM_RESOURCE_ATTRIBUTE_ACE_TYPE      = 0x12;  
+const WINDOWS_SYSTEM_SCOPED_POLICY_ID_ACE_TYPE        = 0x13;  
 
-###### NFSv4 ACL
+###### NFSv4 DACL
 
-// NFSv4 ACE type: RFC 5661 6.2.1.1
-const NFSv4_ACCESS_ALLOWED_ACE_TYPE = 0x00000000;  
-const NFSv4_ACCESS_DENIED_ACE_TYPE  = 0x00000001;  
-const NFSv4_SYSTEM_AUDIT_ACE_TYPE   = 0x00000002;  
-const NFSv4_SYSTEM_ALARM_ACE_TYPE   = 0x00000003;  
+// NFSv4 ACE type: RFC 5661 §6.2.1.1.
+// NFSv4 natively encodes acetype as a 32-bit unsigned integer.
+// fACL stores the least significant byte. A future revision
+// defining values beyond 0xFF will require a Version bump.
+const NFSv4_ACCESS_ALLOWED_ACE_TYPE = 0x00;  
+const NFSv4_ACCESS_DENIED_ACE_TYPE  = 0x01;  
+const NFSv4_SYSTEM_AUDIT_ACE_TYPE   = 0x02;  
+const NFSv4_SYSTEM_ALARM_ACE_TYPE   = 0x03;  
 
 ##### Permissions
 
-PermissionsフィールドはPlatformフィールドの値によって解釈の仕方が変わります。
+The interpretation of the `Permissions` field depends on `Platform`.
 
-###### POSIX ACL (POSIX.1e)
+###### POSIX.1e (classic)
 
-const POSIX_READ    = 0x004;  
-const POSIX_WRITE   = 0x002;  
-const POSIX_EXECUTE = 0x001;  
+const POSIX_READ    = 0x00000004;  
+const POSIX_WRITE   = 0x00000002;  
+const POSIX_EXECUTE = 0x00000001;  
 
-###### Darwin ACL (POSIX.1e)
+###### Darwin extended
 
 // Darwin ACL: sys/acl.h (macOS SDK, MacOSX15.4.sdk)
 const DARWIN_READ_DATA           = 0x00000002;  
@@ -466,9 +540,9 @@ const DARWIN_WRITE_SECURITY      = 0x00001000;
 const DARWIN_CHANGE_OWNER        = 0x00002000;  
 const DARWIN_SYNCHRONIZE         = 0x00100000;  
 
-###### Windows ACL
+###### Windows DACL
 
-// Windows access mask: MS-DTYP 2.4.3 ACCESS_MASK
+// Windows access mask: MS-DTYP §2.4.3 ACCESS_MASK
 const WINDOWS_READ_DATA            = 0x00000001;  
 const WINDOWS_LIST_DIRECTORY       = 0x00000001;  
 const WINDOWS_WRITE_DATA           = 0x00000002;  
@@ -487,12 +561,9 @@ const WINDOWS_WRITE_ACL            = 0x00040000;
 const WINDOWS_WRITE_OWNER          = 0x00080000;  
 const WINDOWS_SYNCHRONIZE          = 0x00100000;  
 
+###### NFSv4 DACL
 
-###### NFSv4 ACL
-
-// NFSv4 ACL: https://datatracker.ietf.org/doc/html/rfc7530
-//            https://datatracker.ietf.org/doc/html/rfc5661
-
+// NFSv4 access mask: RFC 7530 / RFC 5661
 const NFSv4_READ_DATA            = 0x00000001;  
 const NFSv4_LIST_DIRECTORY       = 0x00000001;  
 const NFSv4_WRITE_DATA           = 0x00000002;  
@@ -515,9 +586,13 @@ const NFSv4_SYNCHRONIZE          = 0x00100000;
 
 ##### Ace flag
 
-Ace flagフィールドはPlatformフィールドの値によって解釈の仕方が変わります。
+The interpretation of the `Ace flag` field depends on `Platform`.
 
-###### Darwin ACL (POSIX.1e)
+###### POSIX.1e (classic)
+
+All bits reserved. Encoders MUST set the field to 0.
+
+###### Darwin extended
 
 // Darwin ACL: sys/acl.h (macOS SDK, MacOSX15.4.sdk)
 const DARWIN_ACL_FLAG_DEFER_INHERIT      = 0x00000001;  
@@ -528,20 +603,20 @@ const DARWIN_ACL_ENTRY_DIRECTORY_INHERIT = 0x00000040;
 const DARWIN_ACL_ENTRY_LIMIT_INHERIT     = 0x00000080;  
 const DARWIN_ACL_ENTRY_ONLY_INHERIT      = 0x00000100;  
 
-###### Windows ACL
+###### Windows DACL
 
-// Windows ACE flags: MS-DTYP 2.4.4.1 ACE_HEADER
-const WINDOWS_OBJECT_INHERIT_ACE        = 0x01;  
-const WINDOWS_CONTAINER_INHERIT_ACE     = 0x02;  
-const WINDOWS_NO_PROPAGATE_INHERIT_ACE  = 0x04;  
-const WINDOWS_INHERIT_ONLY_ACE          = 0x08;  
-const WINDOWS_INHERITED_ACE             = 0x10;  
+// Windows ACE flags: MS-DTYP §2.4.4.1 ACE_HEADER
+const WINDOWS_OBJECT_INHERIT_ACE         = 0x01;  
+const WINDOWS_CONTAINER_INHERIT_ACE      = 0x02;  
+const WINDOWS_NO_PROPAGATE_INHERIT_ACE   = 0x04;  
+const WINDOWS_INHERIT_ONLY_ACE           = 0x08;  
+const WINDOWS_INHERITED_ACE              = 0x10;  
 const WINDOWS_SUCCESSFUL_ACCESS_ACE_FLAG = 0x40;  
-const WINDOWS_FAILED_ACCESS_ACE_FLAG    = 0x80;  
+const WINDOWS_FAILED_ACCESS_ACE_FLAG     = 0x80;  
 
-###### NFSv4 ACL
+###### NFSv4 DACL
 
-// NFSv4 ACE flag: RFC 5661 6.2.1.4
+// NFSv4 ACE flag: RFC 5661 §6.2.1.4
 const NFSv4_FILE_INHERIT_ACE           = 0x00000001;  
 const NFSv4_DIRECTORY_INHERIT_ACE      = 0x00000002;  
 const NFSv4_NO_PROPAGATE_INHERIT_ACE   = 0x00000004;  
@@ -550,6 +625,50 @@ const NFSv4_SUCCESSFUL_ACCESS_ACE_FLAG = 0x00000010;
 const NFSv4_FAILED_ACCESS_ACE_FLAG     = 0x00000020;  
 const NFSv4_IDENTIFIER_GROUP           = 0x00000040;  
 const NFSv4_INHERITED_ACE              = 0x00000080;  
+
+##### Identifier per Platform
+
+For ACEs whose `Ace type` requires a trustee, the `Name` and `Native` fields encode the trustee per `Platform`:
+
+| Platform              | Name (UTF-8 portable)                       | Native (platform verbatim)                                         |
+|:----------------------|:--------------------------------------------|:-------------------------------------------------------------------|
+| 0 POSIX.1e (classic)  | user or group name                          | `uid` or `gid` as 4-byte big-endian unsigned integer               |
+| 1 Darwin extended     | user or group name                          | GUID (16-byte binary)                                              |
+| 2 Windows DACL        | `DOMAIN\User` or UPN (`user@domain`)        | SID per MS-DTYP §2.4.2.2 serialized binary                         |
+| 3 NFSv4 DACL          | `user@domain` or well-known principal (e.g., `OWNER@`, `GROUP@`, `EVERYONE@`) per RFC 5661 §6.2.1.5 | `Native length` MUST be 0; the who-string appears in `Name` only   |
+
+##### Extension data
+
+The `Extension data` trailer carries ace-type-specific information that does not fit the fixed fields above. Its format depends on both `Platform` and `Ace type`.
+
+###### Windows Object ACE
+
+For Windows ACE types `ACCESS_ALLOWED_OBJECT` (`0x05`), `ACCESS_DENIED_OBJECT` (`0x06`), `SYSTEM_AUDIT_OBJECT` (`0x07`), `SYSTEM_ALARM_OBJECT` (`0x08`), `ACCESS_ALLOWED_CALLBACK_OBJECT` (`0x0B`), `ACCESS_DENIED_CALLBACK_OBJECT` (`0x0C`), `SYSTEM_AUDIT_CALLBACK_OBJECT` (`0x0F`), and `SYSTEM_ALARM_CALLBACK_OBJECT` (`0x10`), the `Extension data` layout mirrors the object ACE body defined in MS-DTYP §2.4.4.3:
+
+| significance           |  size    | description                                                        |
+|:-----------------------|:--------:|:-------------------------------------------------------------------|
+| Flags                  | 4-byte   | ObjectType presence flags (bit 0 = ObjectType, bit 1 = InheritedObjectType) |
+| ObjectType             | 16-byte  | present when Flags bit 0 is set                                    |
+| InheritedObjectType    | 16-byte  | present when Flags bit 1 is set                                    |
+| ApplicationData        | variable | callback body (present for CALLBACK variants, empty otherwise)     |
+
+###### Windows Callback ACE
+
+For Windows ACE types `ACCESS_ALLOWED_CALLBACK` (`0x09`), `ACCESS_DENIED_CALLBACK` (`0x0A`), `SYSTEM_AUDIT_CALLBACK` (`0x0D`), and `SYSTEM_ALARM_CALLBACK` (`0x0E`), the `Extension data` is the raw callback body.
+
+###### Windows Resource Attribute ACE
+
+For Windows ACE type `SYSTEM_RESOURCE_ATTRIBUTE` (`0x12`), the `Extension data` is a `CLAIM_SECURITY_ATTRIBUTE_RELATIVE_V1` structure per MS-DTYP §2.4.10.1.
+
+###### Other combinations
+
+For any other `Platform` + `Ace type` combination, `Extension length` MUST be 0.
+
+##### Constraints
+
+- An `fACL` chunk MAY appear multiple times within a single entry, each representing a distinct `Platform` + `Acl type` combination. When multiple `fACL` chunks share the same `Platform` + `Acl type` pair, decoders MUST treat the last occurrence as authoritative.
+- Encoders MAY write `fACL` on entries of any `FHED.Entry kind`. Decoders that cannot interpret a chunk's `Platform` value MUST skip the chunk; extraction MAY proceed using `fPRM` as a fallback source of basic permission information.
+- Decoders SHOULD prefer `Native` for same-platform restoration and `Name` for cross-platform restoration.
 
 ### 4.3. Summary of standard chunks
 
