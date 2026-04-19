@@ -407,13 +407,21 @@ All bits reserved. Encoders MUST set the field to 0.
 
 All bits reserved. Encoders MUST set the field to 0.
 
-###### Windows DACL
+###### Windows DACL (Acl type = 0)
 
-For `Acl type` 0 (DACL) or 1 (SACL), the `Bit flags` field encodes the ACL-applicable subset of `SECURITY_DESCRIPTOR.Control` per MS-DTYP §2.4.6:
+For `fACL` chunks whose `Acl type` is `0` (DACL / primary), the `Bit flags` field encodes the DACL-applicable subset of `SECURITY_DESCRIPTOR.Control` per MS-DTYP §2.4.6:
 
-const WINDOWS_ACL_PROTECTED      = 0x0001;  
-const WINDOWS_ACL_AUTO_INHERITED = 0x0002;  
-const WINDOWS_ACL_DEFAULTED      = 0x0004;  
+const WINDOWS_SE_DACL_PROTECTED      = 0x1000;  
+const WINDOWS_SE_DACL_AUTO_INHERITED = 0x0400;  
+const WINDOWS_SE_DACL_DEFAULTED      = 0x0008;  
+
+###### Windows SACL (Acl type = 1)
+
+For `fACL` chunks whose `Acl type` is `1` (SACL), the `Bit flags` field encodes the SACL-applicable subset of `SECURITY_DESCRIPTOR.Control` per MS-DTYP §2.4.6:
+
+const WINDOWS_SE_SACL_PROTECTED      = 0x2000;  
+const WINDOWS_SE_SACL_AUTO_INHERITED = 0x0800;  
+const WINDOWS_SE_SACL_DEFAULTED      = 0x0020;  
 
 ###### NFSv4 DACL
 
@@ -425,7 +433,7 @@ const NFSv4_ACL_DEFAULTED    = 0x0004;
 
 ##### Entry count
 
-`Entry count` is a big-endian unsigned 16-bit integer. A value of 0 indicates an empty ACL.
+`Entry count` is an unsigned 16-bit integer. A value of 0 indicates an empty ACL.
 
 ##### Ace
 
@@ -561,6 +569,24 @@ const WINDOWS_WRITE_ACL            = 0x00040000;
 const WINDOWS_WRITE_OWNER          = 0x00080000;  
 const WINDOWS_SYNCHRONIZE          = 0x00100000;  
 
+###### Windows System Mandatory Label ACE (type 0x11)
+
+For ACE type `WINDOWS_SYSTEM_MANDATORY_LABEL_ACE_TYPE` (`0x11`), the `Permissions` field carries mandatory policy flags per MS-DTYP §2.4.4.13, not the standard access mask defined above:
+
+const WINDOWS_SYSTEM_MANDATORY_LABEL_NO_WRITE_UP   = 0x00000001;  
+const WINDOWS_SYSTEM_MANDATORY_LABEL_NO_READ_UP    = 0x00000002;  
+const WINDOWS_SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP = 0x00000004;  
+
+The trustee `Native` SID for this ACE type MUST be an integrity level SID (prefix `S-1-16-`).
+
+###### Windows Resource Attribute ACE (type 0x12)
+
+For ACE type `WINDOWS_SYSTEM_RESOURCE_ATTRIBUTE_ACE_TYPE` (`0x12`), the `Permissions` field uses the standard Windows access mask defined above. The per-ACE claim payload is carried in the `Extension data` trailer (see "Extension data" below).
+
+###### Windows Scoped Policy ID ACE (type 0x13)
+
+For ACE type `WINDOWS_SYSTEM_SCOPED_POLICY_ID_ACE_TYPE` (`0x13`), the `Permissions` field is implementation-defined per MS-DTYP §2.4.4.16. The trustee `Native` SID identifies a central access policy rather than a user or group principal.
+
 ###### NFSv4 DACL
 
 // NFSv4 access mask: RFC 7530 / RFC 5661
@@ -603,6 +629,8 @@ const DARWIN_ACL_ENTRY_DIRECTORY_INHERIT = 0x00000040;
 const DARWIN_ACL_ENTRY_LIMIT_INHERIT     = 0x00000080;  
 const DARWIN_ACL_ENTRY_ONLY_INHERIT      = 0x00000100;  
 
+Apple's `acl_flagset_t` is a single 32-bit bitmask that multiplexes ACL-level flags (`ACL_FLAG_DEFER_INHERIT` at bit 0, `ACL_FLAG_NO_INHERIT` at bit 17) and ACE-level flags (`ACL_ENTRY_*` at bits 4-8) within a non-overlapping bit space. fACL preserves Apple's native bit positions by storing both flag categories in the per-ACE `Ace flag` field; on Darwin, the `Bit flags` header field is reserved. Encoders MUST emit identical ACL-level bit values (`DEFER_INHERIT`, `NO_INHERIT`) across all ACEs within a single `fACL` chunk; decoders SHOULD read ACL-level bits from the first ACE.
+
 ###### Windows DACL
 
 // Windows ACE flags: MS-DTYP §2.4.4.1 ACE_HEADER
@@ -630,12 +658,50 @@ const NFSv4_INHERITED_ACE              = 0x00000080;
 
 For ACEs whose `Ace type` requires a trustee, the `Name` and `Native` fields encode the trustee per `Platform`:
 
-| Platform              | Name (UTF-8 portable)                       | Native (platform verbatim)                                         |
-|:----------------------|:--------------------------------------------|:-------------------------------------------------------------------|
-| 0 POSIX.1e (classic)  | user or group name                          | `uid` or `gid` as 4-byte big-endian unsigned integer               |
-| 1 Darwin extended     | user or group name                          | GUID (16-byte binary)                                              |
-| 2 Windows DACL        | `DOMAIN\User` or UPN (`user@domain`)        | SID per MS-DTYP §2.4.2.2 serialized binary                         |
-| 3 NFSv4 DACL          | `user@domain` or well-known principal (e.g., `OWNER@`, `GROUP@`, `EVERYONE@`) per RFC 5661 §6.2.1.5 | `Native length` MUST be 0; the who-string appears in `Name` only   |
+| Platform              | Name (UTF-8 portable)                                                                               | Native (platform verbatim)                                                         |
+|:----------------------|:----------------------------------------------------------------------------------------------------|:-----------------------------------------------------------------------------------|
+| 0 POSIX.1e (classic)  | user or group name                                                                                  | `uid` or `gid` as 4-byte unsigned integer                                          |
+| 1 Darwin extended     | user or group name                                                                                  | GUID (see "Darwin GUID encoding" below)                                            |
+| 2 Windows DACL        | `DOMAIN\User` or UPN (`user@domain`)                                                                | SID in packet binary format (see "Windows SID encoding" below)                     |
+| 3 NFSv4 DACL          | `user@domain`, `group@domain`, or a well-known principal (see "NFSv4 well-known principals" below) per RFC 5661 §6.2.1.5 | `Native length` MUST be 0; the who-string appears in `Name` only                   |
+
+##### Windows SID encoding
+
+The `Native` field for Platform 2 (Windows DACL/SACL) carries the SID in the packet representation defined by MS-DTYP (SID - Packet Representation). The byte layout is:
+
+| offset | size | field                                              |
+|:-------|:----:|:---------------------------------------------------|
+| 0      | 1    | Revision (MUST be 1)                               |
+| 1      | 1    | SubAuthorityCount (0 through 15)                   |
+| 2      | 6    | IdentifierAuthority (48-bit big-endian)            |
+| 8      | 4*N  | SubAuthority[N] (each 32-bit little-endian)        |
+
+The total SID size is `8 + 4 × SubAuthorityCount` bytes, ranging from 8 to 68 bytes. `Native length` MUST equal this computed size.
+
+Note: `SubAuthority` values use little-endian encoding within the SID packet, which differs from the big-endian convention used elsewhere in PNA (§2.2). This is a deliberate preservation of the Windows native wire format; encoders and decoders that interact with Windows security APIs can use the SID bytes verbatim without byte-order conversion.
+
+##### Darwin GUID encoding
+
+The `Native` field for Platform 1 (Darwin extended) carries a universally unique identifier per RFC 4122, stored as 16 bytes in network byte order (big-endian). This matches Apple's `uuid_t` serialization. `Native length` for Platform 1 MUST equal 16.
+
+##### NFSv4 well-known principals
+
+Per RFC 5661 §6.2.1.5 and RFC 7530 §6.2.1.5, the following UTF-8 `who` strings are reserved well-known principals. Encoders writing these values place them in the `Name` field (with `Native length` = 0 per the NFSv4 row of "Identifier per Platform"):
+
+| who              | meaning                                                       |
+|:-----------------|:--------------------------------------------------------------|
+| `OWNER@`         | the file owner                                                |
+| `GROUP@`         | the owning group of the file                                  |
+| `EVERYONE@`      | the world, including `OWNER@` and `GROUP@`                    |
+| `INTERACTIVE@`   | principals authenticated via an interactive login session     |
+| `NETWORK@`       | principals authenticated via the network                      |
+| `DIALUP@`        | principals authenticated via a dial-up connection             |
+| `BATCH@`         | principals authenticated via a batch job                      |
+| `ANONYMOUS@`     | principals accessed through anonymous (unauthenticated) means |
+| `AUTHENTICATED@` | any authenticated principal (opposite of `ANONYMOUS@`)        |
+| `SERVICE@`       | principals representing system services                       |
+
+The `NFSv4_IDENTIFIER_GROUP` flag (`0x00000040` in `Ace flag`) has no defined effect on these well-known principals; encoders SHOULD set it to 0 when the `Name` is a well-known principal, and MUST use it to disambiguate a user (`user@domain`, flag clear) from a group (`group@domain`, flag set) for regular domain-qualified identifiers.
 
 ##### Extension data
 
@@ -645,12 +711,12 @@ The `Extension data` trailer carries ace-type-specific information that does not
 
 For Windows ACE types `ACCESS_ALLOWED_OBJECT` (`0x05`), `ACCESS_DENIED_OBJECT` (`0x06`), `SYSTEM_AUDIT_OBJECT` (`0x07`), `SYSTEM_ALARM_OBJECT` (`0x08`), `ACCESS_ALLOWED_CALLBACK_OBJECT` (`0x0B`), `ACCESS_DENIED_CALLBACK_OBJECT` (`0x0C`), `SYSTEM_AUDIT_CALLBACK_OBJECT` (`0x0F`), and `SYSTEM_ALARM_CALLBACK_OBJECT` (`0x10`), the `Extension data` layout mirrors the object ACE body defined in MS-DTYP §2.4.4.3:
 
-| significance           |  size    | description                                                        |
-|:-----------------------|:--------:|:-------------------------------------------------------------------|
+| significance           |  size    | description                                                                 |
+|:-----------------------|:--------:|:----------------------------------------------------------------------------|
 | Flags                  | 4-byte   | ObjectType presence flags (bit 0 = ObjectType, bit 1 = InheritedObjectType) |
-| ObjectType             | 16-byte  | present when Flags bit 0 is set                                    |
-| InheritedObjectType    | 16-byte  | present when Flags bit 1 is set                                    |
-| ApplicationData        | variable | callback body (present for CALLBACK variants, empty otherwise)     |
+| ObjectType             | 16-byte  | present when Flags bit 0 is set                                             |
+| InheritedObjectType    | 16-byte  | present when Flags bit 1 is set                                             |
+| ApplicationData        | variable | callback body (present for CALLBACK variants, empty otherwise)              |
 
 ###### Windows Callback ACE
 
@@ -669,6 +735,8 @@ For any other `Platform` + `Ace type` combination, `Extension length` MUST be 0.
 - An `fACL` chunk MAY appear multiple times within a single entry, each representing a distinct `Platform` + `Acl type` combination. When multiple `fACL` chunks share the same `Platform` + `Acl type` pair, decoders MUST treat the last occurrence as authoritative.
 - Encoders MAY write `fACL` on entries of any `FHED.Entry kind`. Decoders that cannot interpret a chunk's `Platform` value MUST skip the chunk; extraction MAY proceed using `fPRM` as a fallback source of basic permission information.
 - Decoders SHOULD prefer `Native` for same-platform restoration and `Name` for cross-platform restoration.
+- Encoders MUST preserve the native ACE ordering from the source when writing `fACL`. Wire order carries evaluation semantics on platforms that perform first-match evaluation (Darwin, NFSv4) and on platforms that mandate a canonical ordering (POSIX.1e, Windows DACL). Decoders MUST read and apply ACEs in wire order and MUST NOT reorder ACEs during round-trip (read followed by re-write).
+- Preserving the complete Windows `SECURITY_DESCRIPTOR` is NOT a goal of this specification. `fACL` carries DACL and SACL content only; the `Owner` and `Group` SIDs and the full `SECURITY_DESCRIPTOR.Control` field are NOT preserved. On extraction to a Windows target, the file owner and group are determined by the extracting environment rather than by the source archive.
 
 ### 4.3. Summary of standard chunks
 
