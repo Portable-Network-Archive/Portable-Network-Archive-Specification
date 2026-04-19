@@ -169,7 +169,7 @@ The following structural rules apply to the contents of an `SDAT` chunk:
 
 - The `SDAT` chunk MUST contain a sequence of standard entry structures, each beginning with a `FHED` chunk and ending with a corresponding `FEND` chunk.
 - All chunks appearing within an `SDAT` chunk must conform to the same structure, layout, and constraints as defined for individual entries in per-entry mode.
-- Ancillary chunks (e.g., `cTIM`, `fPRM`, `xATR`) may appear between `FHED` and `FEND`, following the same rules as in regular entry mode.
+- Ancillary chunks (e.g., `cTIM`, `fPRM`, `xATR`, `fLTP`, `fSIZ`, `fACL`) may appear between `FHED` and `FEND`, following the same rules as in regular entry mode.
 - Encryption and compression, if applied to the solid stream, are performed **after** the entire SDAT datastream has been composed.
 
 Each entry in solid mode is not stored as an independent top-level chunk sequence in the file but is instead **embedded** within the data field of the `SDAT` chunk.
@@ -379,7 +379,7 @@ Decoders MUST reject `fACL` chunks with an unknown `Version` value, because the 
 0 is POSIX.1e (classic)
 1 is Darwin extended
 2 is Windows DACL
-3 is NFSv4 DACL
+3 is NFSv4 DACL (per RFC 5661 / NFSv4.1)
 
 Values 4 through 63 are reserved for future public extensions.
 Values 64 through 255 are reserved for private extensions.
@@ -452,7 +452,7 @@ The Ace (Access Control Entry) structure is repeated `Entry count` times.
 | Extension length  | 4-byte   | byte length of Extension (0 if none)  |
 | Extension data    | k-byte   | ace-type-specific trailer             |
 
-The `Name` field holds a UTF-8 trustee identifier portable across platforms (for example, a user or group name). The `Native` field holds the platform-authoritative trustee representation (see Identifier per Platform below). At least one of `Name` or `Native` MUST be populated unless the Ace type context implies no trustee (for example, POSIX.1e `USER_OBJ`, `GROUP_OBJ`, `MASK`, or `OTHER`).
+The `Name` field holds a UTF-8 trustee identifier portable across platforms (for example, a user or group name). The `Native` field holds the platform-authoritative trustee representation (see Identifier per Platform below). At least one of `Name` or `Native` MUST be populated for ACE types that reference a specific trustee. For ACE types that do not reference a trustee (for example, POSIX.1e `USER_OBJ`, `GROUP_OBJ`, `MASK`, and `OTHER`), `Name length` and `Native length` MUST both be 0.
 
 Encoders SHOULD populate both `Name` and `Native` when both are resolvable. If a decoder cannot simultaneously honor both on the target platform, it SHOULD resolve the trustee from `Name`.
 
@@ -472,8 +472,6 @@ const POSIX_CLASSIC_GROUP_OBJ = 0x02;
 const POSIX_CLASSIC_GROUP     = 0x03;  
 const POSIX_CLASSIC_MASK      = 0x04;  
 const POSIX_CLASSIC_OTHER     = 0x05;  
-
-For `USER_OBJ`, `GROUP_OBJ`, `MASK`, and `OTHER`, `Name length` and `Native length` MUST both be 0.
 
 ###### Darwin extended
 
@@ -560,6 +558,7 @@ const WINDOWS_ADD_SUBDIRECTORY     = 0x00000004;
 const WINDOWS_READ_NAMED_ATTRS     = 0x00000008;  
 const WINDOWS_WRITE_NAMED_ATTRS    = 0x00000010;  
 const WINDOWS_EXECUTE              = 0x00000020;  
+const WINDOWS_TRAVERSE             = 0x00000020;  
 const WINDOWS_DELETE_CHILD         = 0x00000040;  
 const WINDOWS_READ_ATTRIBUTES      = 0x00000080;  
 const WINDOWS_WRITE_ATTRIBUTES     = 0x00000100;  
@@ -568,6 +567,12 @@ const WINDOWS_READ_ACL             = 0x00020000;
 const WINDOWS_WRITE_ACL            = 0x00040000;  
 const WINDOWS_WRITE_OWNER          = 0x00080000;  
 const WINDOWS_SYNCHRONIZE          = 0x00100000;  
+const WINDOWS_ACCESS_SYSTEM_SECURITY = 0x01000000;  
+const WINDOWS_MAXIMUM_ALLOWED        = 0x02000000;  // SHOULD NOT appear in stored security descriptors per MS-DTYP §2.4.3  
+const WINDOWS_GENERIC_ALL            = 0x10000000;  
+const WINDOWS_GENERIC_EXECUTE        = 0x20000000;  
+const WINDOWS_GENERIC_WRITE          = 0x40000000;  
+const WINDOWS_GENERIC_READ           = 0x80000000;  
 
 ###### Windows System Mandatory Label ACE (type 0x11)
 
@@ -589,7 +594,7 @@ For ACE type `WINDOWS_SYSTEM_SCOPED_POLICY_ID_ACE_TYPE` (`0x13`), the `Permissio
 
 ###### NFSv4 DACL
 
-// NFSv4 access mask: RFC 7530 / RFC 5661
+// NFSv4 access mask: RFC 5661
 const NFSv4_READ_DATA            = 0x00000001;  
 const NFSv4_LIST_DIRECTORY       = 0x00000001;  
 const NFSv4_WRITE_DATA           = 0x00000002;  
@@ -621,7 +626,7 @@ All bits reserved. Encoders MUST set the field to 0.
 ###### Darwin extended
 
 // Darwin ACL: sys/acl.h (macOS SDK, MacOSX15.4.sdk)
-const DARWIN_ACL_FLAG_DEFER_INHERIT      = 0x00000001;  
+const DARWIN_ACL_FLAG_DEFER_INHERIT      = 0x00000001;  // API is marked tentative in macOS SDK  
 const DARWIN_ACL_FLAG_NO_INHERIT         = 0x00020000;  
 const DARWIN_ACL_ENTRY_INHERITED         = 0x00000010;  
 const DARWIN_ACL_ENTRY_FILE_INHERIT      = 0x00000020;  
@@ -686,7 +691,7 @@ The `Native` field for Platform 1 (Darwin extended) carries a universally unique
 
 ##### NFSv4 well-known principals
 
-Per RFC 5661 §6.2.1.5 and RFC 7530 §6.2.1.5, the following UTF-8 `who` strings are reserved well-known principals. Encoders writing these values place them in the `Name` field (with `Native length` = 0 per the NFSv4 row of "Identifier per Platform"):
+Per RFC 5661 §6.2.1.5, the following UTF-8 `who` strings are reserved well-known principals. Encoders writing these values place them in the `Name` field (with `Native length` = 0 per the NFSv4 row of "Identifier per Platform"):
 
 | who              | meaning                                                       |
 |:-----------------|:--------------------------------------------------------------|
