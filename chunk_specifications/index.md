@@ -356,23 +356,54 @@ The chunk data consists of zero or more bytes representing the size as a big-end
 #### 4.2.6 fACL Access Control List
 
 Access Control List (ACL) information is recorded.
-An `fACL` chunk consists of an 8-byte header followed by a sequence of Access Control Entries (ACEs). Values in the `Ace type`, `Permissions`, `Ace flag`, and `Bit flags` fields are interpreted according to the `Platform` field; decoders MUST read `Platform` before interpreting those fields.
+An `fACL` chunk consists of a 12-byte header followed by a sequence of Access Control Entries (ACEs). Values in the `Platform flags`, `Ace type`, `Permissions`, `Ace flag`, and `Bit flags` fields are interpreted according to the `Platform` field; decoders MUST read `Platform` before interpreting those fields.
 This chunk appeared after `FHED` chunk and before `FEND` chunk.
 
-| significance |  size       | description                           |
-|:-------------|:-----------:|:--------------------------------------|
-| Version      | 1-byte      | fACL schema version                   |
-| Reserved     | 1-byte      | reserved, MUST be 0                   |
-| Platform     | 1-byte      | acl platform type                     |
-| Acl type     | 1-byte      | type of acl                           |
-| Bit flags    | 2-byte      | platform-dependent ACL-level flags    |
-| Entry count  | 2-byte      | number of access control entries      |
-| Ace ...      | variable    | repeat access control entries         |
+| significance   |  size    | description                           |
+|:---------------|:--------:|:--------------------------------------|
+| Version        | 1-byte   | fACL schema version                   |
+| Reserved       | 4-byte   | reserved, MUST be 0                   |
+| Platform flags | 1-byte   | platform-dependent header flags       |
+| Platform       | 1-byte   | acl platform type                     |
+| Acl type       | 1-byte   | type of acl                           |
+| Bit flags      | 2-byte   | platform-dependent ACL-level flags    |
+| Entry count    | 2-byte   | number of access control entries      |
+| Ace ...        | variable | repeat access control entries         |
 
 ##### Version
 
 Encoders conforming to this specification MUST set `Version` to `0`.
 Decoders MUST reject `fACL` chunks with an unknown `Version` value, because the interpretation of subsequent fields may change in future schema versions.
+
+##### Reserved
+
+Encoders MUST set the 4-byte `Reserved` field to 0. Decoders MUST ignore any non-zero bits to preserve forward compatibility with future schema versions that may repurpose reserved space.
+
+##### Platform flags
+
+The `Platform flags` field holds platform-dependent header-level flags. Undefined bits are reserved; encoders MUST set undefined bits to 0, and decoders MUST ignore them.
+
+###### POSIX.1e (classic)
+
+All bits reserved. Encoders MUST set the field to 0.
+
+###### Darwin extended
+
+All bits reserved. Encoders MUST set the field to 0.
+
+###### Windows DACL
+
+For `fACL` chunks whose `Acl type` is `0` (DACL), the `Platform flags` field supports:
+
+const WINDOWS_NULL_DACL = 0x01;  // fACL represents a NULL DACL
+                                 // (SE_DACL_PRESENT = 0, grants all access on Windows).
+                                 // When set, Entry count MUST be 0.
+
+For `Acl type` `1` (SACL), all bits are reserved.
+
+###### NFSv4 DACL
+
+All bits reserved.
 
 ##### Platform
 
@@ -454,11 +485,11 @@ The Ace (Access Control Entry) structure is repeated `Entry count` times.
 
 The `Name` field holds a UTF-8 trustee identifier portable across platforms (for example, a user or group name). The `Native` field holds the platform-authoritative trustee representation (see Identifier per Platform below). At least one of `Name` or `Native` MUST be populated for ACE types that reference a specific trustee. For ACE types that do not reference a trustee (for example, POSIX.1e `USER_OBJ`, `GROUP_OBJ`, `MASK`, and `OTHER`), `Name length` and `Native length` MUST both be 0.
 
-Encoders SHOULD populate both `Name` and `Native` when both are resolvable. If a decoder cannot simultaneously honor both on the target platform, it SHOULD resolve the trustee from `Name`.
+Encoders SHOULD populate both `Name` and `Native` when both are resolvable. Decoders SHOULD resolve the trustee from `Name` when it is populated. `Native` MAY serve as a fallback, for example when `Name` is absent or when `Name` cannot be resolved on the target system.
 
 ##### Ace type
 
-The interpretation of the `Ace type` field depends on `Platform`.
+The interpretation of the `Ace type` field depends on `Platform`. All ACEs within a single `fACL` chunk share the chunk's `Platform` value. Encoders MUST populate each ACE's `Ace type` field with a value defined for the chunk's `Platform` in the enumerations below; encoders MUST NOT mix `Ace type` values drawn from different `Platform` enumerations within one `fACL` chunk. Decoders MUST interpret `Ace type` values using the enumeration that corresponds to the chunk's `Platform`.
 
 ###### POSIX.1e (classic)
 
@@ -555,16 +586,16 @@ const WINDOWS_WRITE_DATA           = 0x00000002;
 const WINDOWS_ADD_FILE             = 0x00000002;  
 const WINDOWS_APPEND_DATA          = 0x00000004;  
 const WINDOWS_ADD_SUBDIRECTORY     = 0x00000004;  
-const WINDOWS_READ_NAMED_ATTRS     = 0x00000008;  
-const WINDOWS_WRITE_NAMED_ATTRS    = 0x00000010;  
+const WINDOWS_FILE_READ_EA         = 0x00000008;  // a.k.a. NFSv4 ACE4_READ_NAMED_ATTRS (same bit)  
+const WINDOWS_FILE_WRITE_EA        = 0x00000010;  // a.k.a. NFSv4 ACE4_WRITE_NAMED_ATTRS (same bit)  
 const WINDOWS_EXECUTE              = 0x00000020;  
 const WINDOWS_TRAVERSE             = 0x00000020;  
 const WINDOWS_DELETE_CHILD         = 0x00000040;  
 const WINDOWS_READ_ATTRIBUTES      = 0x00000080;  
 const WINDOWS_WRITE_ATTRIBUTES     = 0x00000100;  
 const WINDOWS_DELETE               = 0x00010000;  
-const WINDOWS_READ_ACL             = 0x00020000;  
-const WINDOWS_WRITE_ACL            = 0x00040000;  
+const WINDOWS_READ_CONTROL         = 0x00020000;  
+const WINDOWS_WRITE_DAC            = 0x00040000;  
 const WINDOWS_WRITE_OWNER          = 0x00080000;  
 const WINDOWS_SYNCHRONIZE          = 0x00100000;  
 const WINDOWS_ACCESS_SYSTEM_SECURITY = 0x01000000;  
@@ -739,9 +770,12 @@ For any other `Platform` + `Ace type` combination, `Extension length` MUST be 0.
 
 - An `fACL` chunk MAY appear multiple times within a single entry, each representing a distinct `Platform` + `Acl type` combination. When multiple `fACL` chunks share the same `Platform` + `Acl type` pair, decoders MUST treat the last occurrence as authoritative.
 - Encoders MAY write `fACL` on entries of any `FHED.Entry kind`. Decoders that cannot interpret a chunk's `Platform` value MUST skip the chunk; extraction MAY proceed using `fPRM` as a fallback source of basic permission information.
-- Decoders SHOULD prefer `Native` for same-platform restoration and `Name` for cross-platform restoration.
 - Encoders MUST preserve the native ACE ordering from the source when writing `fACL`. Wire order carries evaluation semantics on platforms that perform first-match evaluation (Darwin, NFSv4) and on platforms that mandate a canonical ordering (POSIX.1e, Windows DACL). Decoders MUST read and apply ACEs in wire order and MUST NOT reorder ACEs during round-trip (read followed by re-write).
-- Preserving the complete Windows `SECURITY_DESCRIPTOR` is NOT a goal of this specification. `fACL` carries DACL and SACL content only; the `Owner` and `Group` SIDs and the full `SECURITY_DESCRIPTOR.Control` field are NOT preserved. On extraction to a Windows target, the file owner and group are determined by the extracting environment rather than by the source archive.
+- Preserving the complete Windows `SECURITY_DESCRIPTOR` is NOT a goal of this specification. `fACL` carries DACL and SACL content with a limited `SECURITY_DESCRIPTOR.Control` subset (the `PROTECTED`, `AUTO_INHERITED`, and `DEFAULTED` bits per `Acl type`; the `Platform flags` field preserves the NULL DACL distinction via `WINDOWS_NULL_DACL`). The `Owner` and `Group` SIDs and other `Control` bits outside these subsets are NOT preserved. On extraction to a Windows target, the file owner and group are determined by the extracting environment rather than by the source archive.
+- When both `fPRM` and an `fACL` chunk with `Platform = 0` (POSIX.1e) are present on the same entry, the `fACL` chunk is authoritative for permission bits. Decoders MUST derive the Unix mode bits from the `fACL` `USER_OBJ`, `GROUP_OBJ`, and `OTHER` entries and MUST ignore the corresponding mode bits in `fPRM`. The `fPRM` chunk's `uid` / `gid` / `uname` / `gname` fields remain authoritative for file ownership regardless of `fACL` presence. Encoders SHOULD emit consistent values across both chunks.
+- On `FHED.Entry kind = 2` (symbolic link) or `3` (hard link) entries, `fACL` describes the Access Control List of the link entry itself, not the link target. The link target's ACL, when stored in the archive, appears on the target's own entry. Encoders MAY write `fACL` on link entries; decoders restoring to a target operating system that does not support ACLs on symbolic or hard links MAY ignore `fACL` on those entries.
+- When an entry carries both an `fACL` chunk with `Platform = 0` and an `xATR` chunk with `name` equal to `system.posix_acl_access` or `system.posix_acl_default`, `fACL` is authoritative. Decoders MUST apply the ACL from `fACL` and MUST NOT additionally apply the redundant POSIX ACL xattrs. Encoders SHOULD NOT emit both representations for the same ACL; if encoders include both for backward compatibility with decoders that do not understand `fACL`, the two representations MUST carry semantically equivalent content.
+- For ACE types whose `Extension data` includes an `ApplicationData` trailer (Windows Callback ACE `0x09`, `0x0A`, `0x0D`, `0x0E`; Callback Object ACE `0x0B`, `0x0C`, `0x0F`, `0x10`) or a `CLAIM_SECURITY_ATTRIBUTE_RELATIVE_V1` structure (Windows `SYSTEM_RESOURCE_ATTRIBUTE` `0x12`), decoders SHOULD treat the trailer as opaque binary during read and write, and SHOULD NOT parse, evaluate, or act upon its content. Semantic interpretation of these payloads is the responsibility of the operating system's security subsystem at access-evaluation time.
 
 ### 4.3. Summary of standard chunks
 
