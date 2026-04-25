@@ -51,3 +51,35 @@ Alex Biryukov, Daniel Dinu, and Dmitry Khovratovich University of Luxembourg, Lu
 ## **[RFC-9106]**
 A. Biryukov University of Luxembourg, D. Dinu University of Luxembourg, D. Khovratovich ABDK Consulting, S. Josefsson SJD AB, Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications, September 2021.
 [https://tools.ietf.org/html/rfc9106](https://tools.ietf.org/html/rfc9106)
+
+### **[NIST SP 800-38D]**
+M. Dworkin, "Recommendation for Block Cipher Modes of Operation: Galois/Counter Mode (GCM) and GMAC", NIST Special Publication 800-38D, November 2007.
+[https://csrc.nist.gov/pubs/sp/800/38/d/final](https://csrc.nist.gov/pubs/sp/800/38/d/final)
+
+### **[RFC-5869]**
+H. Krawczyk and P. Eronen, "HMAC-based Extract-and-Expand Key Derivation Function (HKDF)", RFC 5869, IETF, May 2010.
+[https://datatracker.ietf.org/doc/html/rfc5869](https://datatracker.ietf.org/doc/html/rfc5869)
+
+### **[RFC-6367]**
+S. Kanno and M. Kanda, "Addition of the Camellia Cipher Suites to Transport Layer Security (TLS)", RFC 6367, NTT Software Corporation / NTT Information Sharing Platform Laboratories, September 2011.
+[https://datatracker.ietf.org/doc/html/rfc6367](https://datatracker.ietf.org/doc/html/rfc6367)
+
+### **[RFC-3713]**
+M. Matsui, J. Nakajima, and S. Moriai, "A Description of the Camellia Encryption Algorithm", RFC 3713, Mitsubishi Electric Corporation / NTT, April 2004.
+[https://datatracker.ietf.org/doc/html/rfc3713](https://datatracker.ietf.org/doc/html/rfc3713)
+
+### **[FIPS-197]**
+National Institute of Standards and Technology, "Advanced Encryption Standard (AES)", Federal Information Processing Standards Publication 197, November 2001 (updated 2023).
+[https://csrc.nist.gov/publications/detail/fips/197/final](https://csrc.nist.gov/publications/detail/fips/197/final)
+
+### **[Bellare-Namprempre-2000]**
+M. Bellare and C. Namprempre, "Authenticated Encryption: Relations among Notions and Analysis of the Generic Composition Paradigm", ASIACRYPT 2000, LNCS 1976, pp. 531-545.
+[https://eprint.iacr.org/2000/025](https://eprint.iacr.org/2000/025)
+
+### **[Joux-2006]**
+A. Joux, "Authentication Failures in NIST version of GCM", Public Comments to NIST, 2006. Documents the catastrophic consequence of nonce reuse in GCM (the "forbidden attack").
+[https://csrc.nist.gov/csrc/media/projects/block-cipher-techniques/documents/bcm/comments/800-38-series-drafts/gcm/joux_comments.pdf](https://csrc.nist.gov/csrc/media/projects/block-cipher-techniques/documents/bcm/comments/800-38-series-drafts/gcm/joux_comments.pdf)
+
+### **[Vaudenay-2002]**
+S. Vaudenay, "Security Flaws Induced by CBC Padding — Applications to SSL, IPSEC, WTLS...", EUROCRYPT 2002, LNCS 2332, pp. 534-545.
+[https://www.iacr.org/cryptodb/archive/2002/EUROCRYPT/2850/2850.pdf](https://www.iacr.org/cryptodb/archive/2002/EUROCRYPT/2850/2850.pdf)

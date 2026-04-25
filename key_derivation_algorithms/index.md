@@ -71,3 +71,79 @@ Argon2id is a hybrid that combines the resistance to side-channel attacks of Arg
 #### 8.2.5 Recommendations
 
 As per current best practices, it is advised to allocate as much memory as is practical for the application and at least two iterations. The parallelism should be set according to the number of available processor cores. The salt should be a unique, cryptographically secure random value for each password.
+
+For new PNA archives (AHED Minor version 1 with AEAD entries), encoders SHOULD use Argon2id with the [RFC 9106](../references/index.md#rfc-9106) "first recommended" profile:
+
+| Parameter | Value | Rationale |
+|---|---|---|
+| Memory cost (m_cost) | 65536 KiB (64 MiB) | RFC 9106 §4 first-recommended profile |
+| Time cost (t_cost) | 3 | RFC 9106 §4 first-recommended profile |
+| Parallelism (p_cost) | `available_parallelism()` (typically 4) | Adapts to host CPU |
+| Salt length | 16 bytes from CSPRNG | RFC 9106 §3.1 minimum |
+| Output (master key) length | 32 bytes (256 bits) | Sized for AES-256 / Camellia-256 |
+
+The 19 MiB / t=2 / p=1 "second recommended" profile (RFC 9106 §4) is acceptable only on memory-constrained devices.
+
+### 8.3. HKDF (HMAC-based Key Derivation Function)
+
+This section specifies the use of HKDF (HMAC-based Extract-and-Expand Key Derivation Function), as defined in [RFC 5869](../references/index.md#rfc-5869), for deriving per-entry cryptographic keys from a previously established archive master key. HKDF is REQUIRED when an entry uses an AEAD cipher mode such as GCM ([§7.4](../cipher_modes/index.md#74-galoiscounter-mode-gcm)).
+
+> **Scope.** HKDF is NOT a password hash function and MUST NOT be used to derive keys directly from low-entropy inputs such as passwords. It is a key derivation function that takes a uniformly random input keying material (IKM) and produces an arbitrary number of independent output keys. In PNA, the IKM is the archive master key, which is itself derived from the user-supplied password by Argon2id ([§8.2](#82-argon2)) or PBKDF2 ([§8.1](#81-password-based-key-derivation-function-2pbkdf2)).
+
+#### 8.3.1 Algorithm Specification
+
+PNA uses HKDF instantiated with HMAC-SHA-256 (HKDF-SHA-256). The function operates in two phases:
+
+- **Extract**: a salt and the IKM are combined via HMAC to produce a fixed-length pseudorandom key (PRK).
+- **Expand**: the PRK and a context-specific `info` string are combined to produce the desired output key.
+
+For per-entry key derivation in PNA, both phases are invoked together (the conventional `HKDF` function).
+
+#### 8.3.2 Parameters
+
+| Parameter | Value (PNA per-entry key derivation) |
+|---|---|
+| Hash function | SHA-256 |
+| IKM (input keying material) | The 32-byte archive master key derived from the user password via Argon2id (§8.2) or PBKDF2 (§8.1) |
+| Salt | Byte concatenation `archive_identifier \|\| entry_random` (32 bytes total): `archive_identifier` from the `AENC` chunk for the entry's cipher_mode ([§4.1.x AENC](../chunk_specifications/index.md)); `entry_random` from this entry's `FENC` chunk ([§4.1.x FENC](../chunk_specifications/index.md)) |
+| Info | The byte concatenation `"PNA-AEAD-v1-" \|\| algorithm_name \|\| "-256-GCM-" \|\| entry_index_be4`, where `algorithm_name` is `"AES"` (for `Encryption method = 1`) or `"Camellia"` (for `Encryption method = 2`), and `entry_index_be4` is the 4-byte big-endian encoding of the 0-indexed position of this entry within the archive |
+| Output length (L) | 32 bytes (256 bits) |
+
+The resulting 32-byte output is the per-entry GCM key.
+
+#### 8.3.3 Process
+
+The full HKDF-SHA-256 procedure is normatively specified in [RFC 5869](../references/index.md#rfc-5869) §2 and is reproduced here only for convenience:
+
+```
+salt = AENC[cipher_mode_id].archive_identifier (16B) || FENC.entry_random (16B)
+       (32 bytes total)
+info = "PNA-AEAD-v1-" || algorithm_name || "-256-GCM-" || entry_index_be4
+
+PRK  = HMAC-SHA-256(salt, master_key)
+T(1) = HMAC-SHA-256(PRK, info || 0x01)
+output = T(1)[0..32]   (since L = 32 ≤ 32, only one block of T is needed)
+```
+
+#### 8.3.4 Security Considerations
+
+The `info` string binds the per-entry key derivation to:
+- the chosen cipher algorithm (AES vs Camellia, via `algorithm_name`)
+- the AEAD construction version (`"PNA-AEAD-v1-..."`)
+- the entry's archive position (via `entry_index_be4`)
+
+Any attempt to tamper with the `Encryption method` byte in FHED to switch the cipher algorithm (downgrade attack), or to reorder entries, will cause the decoder to derive a different per-entry key, leading to authentication tag verification failure (see [§7.4.2](../cipher_modes/index.md#742-associated-data-aad)).
+
+The `salt` input combines two independent random sources:
+- `archive_identifier` (from `AENC`) ensures cross-archive isolation: two archives with the same password derive different per-entry keys because their `archive_identifier` values differ.
+- `entry_random` (from `FENC`) provides defense-in-depth against encoder bugs that might otherwise produce duplicate per-entry contexts (e.g., reusing an entry_index across entries).
+
+A collision of `entry_random` between two entries within the same archive would not by itself break security if `entry_index_be4` is correctly assigned, but combined with an `entry_index` collision it would derive identical per-entry GCM keys, causing catastrophic GCM nonce reuse (see [Joux 2006](../references/index.md#joux-2006)). Encoders MUST regenerate `entry_random` from a CSPRNG for every entry.
+
+The use of HKDF is what makes PNA's GCM construction safe under the [NIST SP 800-38D](../references/index.md#nist-sp-800-38d) §8.3 limit of 2^32 invocations per key: each entry gets its own GCM key, and the chunk counter resets per entry, so the per-key invocation count is bounded by the chunk count of a single entry (typically far below 2^32).
+
+#### 8.3.5 Recommendations
+
+Encoders SHOULD use a separate `entry_random` from a CSPRNG for every entry, even when the same plaintext is being archived multiple times in the same archive. There is no scenario in which two entries should share an `entry_random`.
+
+Decoders MUST NOT cache or reuse per-entry derived keys across archives or sessions. Each archive opening session SHOULD re-derive keys from the password through Argon2id/PBKDF2, so that interrupting and resuming archive processing does not retain key material in memory longer than necessary.

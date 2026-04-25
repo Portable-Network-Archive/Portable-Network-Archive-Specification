@@ -20,12 +20,20 @@ It may be changed if there is a change in the structure of each chunk that makes
 
 ##### Minor version
 
-Currently, only 0 is defined.
-It may be changed when there is a change in the type of chunks that make up PNA.
+Two minor versions are currently defined (under Major version 0):
+
+| Value | Meaning |
+|---|---|
+| `0` | Original baseline. Confidentiality-only encryption (CBC, CTR) is the only encryption available. |
+| `1` | Authenticated Encryption with Associated Data (AEAD) is added (in addition to CBC/CTR). Introduces the `AENC` (per-archive) and `FENC` (per-entry) chunk types and reserves `Cipher mode` value 2 for GCM. See [§7.4](../cipher_modes/index.md#74-galoiscounter-mode-gcm). |
+
+Decoders MAY accept archives whose Minor version is higher than the highest the decoder implements; in that case, the decoder will simply encounter the new (unknown) critical chunk types added by the higher minor version and reject the archive at chunk level per [Recommendations for Decoders §12.1](../recommendations_for_decoders/index.md#121-error-checking). Decoders SHOULD report the Minor version mismatch in their error message to aid the user.
+
+The Minor version may be incremented in future revisions of this specification when new chunk types are added.
 
 ##### General purpose bit flag
 
-__Bit0__ ~ __Bit15__ currently does not used. reserve for the future.
+__Bit 0__ ~ __Bit 15__: currently not used. Reserved for future use. Encoders MUST set these bits to `0`. Decoders MUST ignore the values of these bits when reading; future specification revisions may assign meanings.
 
 ##### Archive number
 
@@ -88,10 +96,18 @@ When this field value is 0, `PHSF` chunk is not required.
 ##### Cipher mode
 
 Cipher mode of encryption.
-0 is cbc mode
-1 is ctr mode
 
-Not interested in the value of this field, if Encryption method filed value is 0.
+| Value | Mode | Status | AHED Minor version required |
+|---|---|---|---|
+| `0` | CBC | Legacy (read-only recommended) | 0 or higher |
+| `1` | CTR | Legacy (read-only recommended) | 0 or higher |
+| `2` | GCM (AEAD) | Recommended for new archives | 1 or higher |
+
+When `Cipher mode = 2` (GCM), the entry's data layout follows the AEAD rules defined in [§7.4 GCM](../cipher_modes/index.md#74-galoiscounter-mode-gcm) and [§7.5 Nonce and Tag Placement for AEAD Modes](../cipher_modes/index.md#75-nonce-and-tag-placement-for-aead-modes). The archive MUST contain an `AENC` chunk for `cipher_mode_id = 2` after AHED ([§4.1.x](#41x-aenc-archive-encryption-context)), and the entry MUST contain a `FENC` chunk after FHED ([§4.1.x](#41x-fenc-per-entry-encryption-context)).
+
+Encoders MUST NOT write `Cipher mode = 2` in archives whose AHED Minor version is 0. Decoders supporting only Minor version 0 will treat `Cipher mode = 2` as an unrecognized value (which, per [Recommendations for Decoders §12.1](../recommendations_for_decoders/index.md#121-error-checking), is a fatal error in critical chunks).
+
+Not interested in the value of this field, if Encryption method field value is 0.
 
 ##### File path
 
@@ -115,6 +131,7 @@ The `Compression method`, `Encryption method`, and `Cipher mode` fields in the F
 |                     | 2     | Camellia              | 256-bit key                | [§6.2](../cipher_algorithms/index.md#62-camellia)                  |
 | Cipher mode         | 0     | CBC                   | Cipher Block Chaining      | [§7.1](../cipher_modes/index.md#71-cipher-block-chaining-mode-cbc) |
 |                     | 1     | CTR                   | Counter Mode               | [§7.2](../cipher_modes/index.md#72-counter-mode-ctr)               |
+|                     | 2     | GCM                   | Galois/Counter Mode (AEAD) | [§7.4](../cipher_modes/index.md#74-galoiscounter-mode-gcm)         |
 
 **Note:**
 - Do not use algorithm-internal method codes (such as zlib's method/flags code) in these fields. Only the PNA method code (integer value) must be stored in the FHED chunk fields.
@@ -131,6 +148,62 @@ If the value of the Encryption method field of `FHED` chunk is not 0, this chunk
 | n-byte  | PHC string format |
 
 About [PHC string format](https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md)
+
+> **Note for AEAD entries.** When the entry uses an AEAD `Cipher mode` (e.g., 2 = GCM), the password hash described by PHSF derives the **archive master key**, not the per-entry encryption key. The per-entry encryption key is derived from the master key via HKDF (see [§8.3](../key_derivation_algorithms/index.md#83-hkdf-hmac-based-key-derivation-function)) using two inputs: the per-archive `archive_identifier` carried in the `AENC` chunk for the entry's cipher_mode, and the per-entry `entry_random` carried in the entry's `FENC` chunk.
+
+#### 4.1.x. AENC Archive ENcryption Context
+
+The `AENC` chunk carries per-archive AEAD context data for one cipher mode. It uses an inline-tag schema so that the same chunk type can serve any AEAD cipher mode, and it carries an explicit framework version field for future schema evolution.
+
+##### Layout
+
+| Bytes      | Field              | Description                                                                       |
+|:-----------|:-------------------|:----------------------------------------------------------------------------------|
+| 1          | cipher_mode_id     | The FHED `Cipher mode` value to which this AENC chunk's payload applies.          |
+| 1          | framework_version  | Version of the AEAD framework schema. The first version defined here is `1`.      |
+| _variable_ | payload            | Cipher-mode-specific data. Length and structure are determined by `(cipher_mode_id, framework_version)` per the table below. |
+
+The chunk's standard data length field counts all three fields (`cipher_mode_id` + `framework_version` + `payload`).
+
+##### Payload definitions for `framework_version = 1`
+
+| `cipher_mode_id` | Cipher mode      | `payload` length | `payload` content |
+|:----------------:|:-----------------|:----------------:|:------------------|
+| 2                | GCM ([§7.4](../cipher_modes/index.md#74-galoiscounter-mode-gcm)) | 16 bytes | `archive_identifier`: 16 bytes generated by a cryptographically secure random number generator, unique per archive. Used by all AEAD operations in this archive that target `cipher_mode_id = 2` (see [§7.4.2 AAD](../cipher_modes/index.md#742-associated-data-aad), [§7.4.3 nonce](../cipher_modes/index.md#743-nonce-derivation), and [§8.3 HKDF](../key_derivation_algorithms/index.md#83-hkdf-hmac-based-key-derivation-function)). |
+
+Future framework versions or future cipher_mode_id values define their own payload schemas in their respective specification chapters.
+
+##### Constraints
+
+- An archive MAY contain MULTIPLE `AENC` chunks (one per `(cipher_mode_id, framework_version)` pair actually used by some entry).
+- For each `(cipher_mode_id, framework_version)` pair used by any entry in the archive, EXACTLY ONE corresponding `AENC` chunk MUST appear.
+- `AENC` chunks MUST appear after the AHED chunk and before the first FHED chunk (i.e., in the archive header region).
+- In a multipart archive, every part MUST contain a byte-identical copy of every `AENC` chunk that appears in the first part. Decoders MUST report a fatal error on mismatch (this defends against cross-archive part substitution).
+- Encoders MUST NOT emit `AENC` for any `cipher_mode_id` not actually used by an AEAD entry in the archive.
+- `framework_version = 0` is RESERVED and MUST NOT be used.
+
+#### 4.1.x. FENC File ENcryption Context
+
+The `FENC` chunk carries per-entry AEAD context data. Unlike `AENC`, `FENC` does not carry inline cipher_mode/version tags: the entry's FHED `Cipher mode` field determines the payload semantics, and the framework_version is inherited from the corresponding `AENC` chunk.
+
+##### Layout
+
+| Bytes      | Field    | Description                                                              |
+|:-----------|:---------|:-------------------------------------------------------------------------|
+| _variable_ | payload  | Cipher-mode-specific data. Length and structure are determined by the entry's FHED `Cipher mode` and the framework_version of the corresponding `AENC` chunk. |
+
+##### Payload definitions for `framework_version = 1`
+
+| Entry FHED `Cipher mode` | Cipher mode | `payload` length | `payload` content |
+|:----:|:-----------|:----------------:|:------------------|
+| 2    | GCM        | 16 bytes         | `entry_random`: 16 bytes generated by a cryptographically secure random number generator, unique per entry within an archive. Used as additional input to the per-entry key derivation (see [§8.3](../key_derivation_algorithms/index.md#83-hkdf-hmac-based-key-derivation-function)) for defense-in-depth against encoder bugs that might otherwise produce duplicate per-entry keys. |
+
+##### Constraints
+
+- `FENC` is REQUIRED for every entry whose FHED `Cipher mode` corresponds to an AEAD construction (in this version: `Cipher mode = 2` GCM). It MUST NOT appear for entries using non-AEAD cipher modes (CBC, CTR) or for unencrypted entries.
+- `FENC` MUST appear after the entry's FHED chunk and before its first FDAT chunk. The relative order of FENC and PHSF is unconstrained, but encoders SHOULD emit them in the order `FHED → PHSF → FENC → FDAT` for consistency.
+- Within a single entry, `FENC` MUST appear EXACTLY ONCE.
+- The `entry_random` field MUST be unique within an archive. Encoders MUST regenerate it for every entry using a CSPRNG; collisions across entries within a single archive (under the same master key) would derive identical per-entry keys, undermining the defense-in-depth purpose of this chunk.
 
 ### 4.1.6. FDAT File data
 
