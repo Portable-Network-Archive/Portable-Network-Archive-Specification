@@ -80,7 +80,7 @@ GCM is defined in [NIST SP 800-38D](../references/index.md#nist-sp-800-38d). The
 | Parameter | Value | Note |
 |---|---|---|
 | Block cipher | Rijndael (AES-256) or Camellia-256 | Per FHED `Encryption method` field |
-| Key size | 256 bits (32 bytes) | Derived per-entry, see [§8.3](../key_derivation_algorithms/index.md#83-hkdf-hmac-based-key-derivation-function) |
+| Key size | 256 bits (32 bytes) | Derived from the entry's PHSF chunk (Argon2id or PBKDF2 output, used directly as GCM key); see [§4.1.5 PHSF](../chunk_specifications/index.md#415-phsf-password-hash) |
 | Nonce size | 96 bits (12 bytes) | Required by NIST SP 800-38D §5.2.1.1; other sizes are NOT permitted in PNA |
 | Authentication tag size | 128 bits (16 bytes) | Full-length tags only; truncated tags are NOT permitted in PNA |
 | Maximum plaintext per nonce | 2^39 - 256 bits ≈ 64 GiB | NIST SP 800-38D §5.2.1.1; encoders MUST chunk longer streams |
@@ -91,57 +91,46 @@ GCM is defined in [NIST SP 800-38D](../references/index.md#nist-sp-800-38d). The
 
 #### 7.4.2 Associated Data (AAD)
 
-GCM requires an Associated Data (AAD) input that is authenticated but not encrypted. PNA constructs the AAD deterministically per chunk so that any tampering with cipher parameters, chunk ordering, archive identity, or entry metadata is detected at tag verification.
+GCM requires an Associated Data (AAD) input that is authenticated but not encrypted. PNA constructs the AAD deterministically per chunk so that any tampering with cipher parameters, entry position, or chunk ordering is detected at tag verification.
 
 The AAD for each FDAT or SDAT chunk MUST be the byte concatenation of the following fields, in order:
 
 | Bytes | Field | Source |
 |---|---|---|
-| 11 | ASCII string `"PNA-AEAD-v1"` (no NUL) | Magic constant binding the framework version |
-| 1  | Encryption method | FHED `Encryption method` byte (1 = AES, 2 = Camellia) |
-| 1  | Cipher mode       | FHED `Cipher mode` byte (= 2 for GCM) |
-| 16 | Archive identifier | `archive_identifier` field of the archive's `AENC` chunk for this `cipher_mode` (see [§4.1.x AENC](../chunk_specifications/index.md)) |
-| 16 | Entry random       | `entry_random` field of this entry's `FENC` chunk (see [§4.1.x FENC](../chunk_specifications/index.md)) |
-| 4  | Entry index       | u32 big-endian; 0-indexed position of this entry within the archive |
-| 4  | Chunk index       | u32 big-endian; 0-indexed position of this FDAT/SDAT chunk within the entry's data stream |
-| 1  | Final-chunk flag  | `0x01` if this is the final FDAT (or SDAT) chunk before FEND (or SEND); `0x00` otherwise |
-| 32 | Metadata hash     | SHA-256 of the byte concatenation of FHED chunk data and all ancillary chunks appearing between FHED and the first FDAT, in their on-disk order |
+| 1 | Encryption method | FHED `Encryption method` byte (1 = AES, 2 = Camellia) |
+| 1 | Cipher mode       | FHED `Cipher mode` byte (= 2 for GCM) |
+| 4 | Entry index       | u32 big-endian; 0-indexed position of this entry within the archive |
+| 4 | Chunk index       | u32 big-endian; 0-indexed position of this FDAT/SDAT chunk within the entry's data stream |
+| 1 | Final-chunk flag  | `0x01` if this is the final FDAT (or SDAT) chunk before FEND (or SEND); `0x00` otherwise |
 
-Total AAD length per chunk: **86 bytes** (constant for `framework_version = 1`).
+Total AAD length per chunk: **11 bytes** (constant for `Cipher mode = 2`).
 
 > **Rationale.** Each field defends against a specific tampering class:
-> - The magic and the cipher parameter bytes prevent algorithm/mode downgrade attacks.
-> - The archive identifier prevents cross-archive ciphertext substitution.
-> - The entry random provides defense-in-depth against encoder bugs that might otherwise produce duplicate per-entry contexts.
-> - The entry and chunk indices prevent reordering attacks.
-> - The final-chunk flag prevents truncation attacks.
-> - The metadata hash binds the entry's plaintext-readable metadata to the ciphertext, so that filename, permissions, timestamps, and extended attributes cannot be silently modified.
+> - The cipher parameter bytes (Encryption method, Cipher mode) prevent algorithm/mode downgrade attacks.
+> - The Entry index prevents intra-archive entry reorder attacks and cross-entry chunk swap attacks (relevant when encoders share a PHSF salt across AEAD entries, as recommended).
+> - The Chunk index prevents intra-entry chunk reorder attacks.
+> - The Final-chunk flag prevents truncation attacks (a removed last chunk causes the new "last" chunk to authenticate with `Final-chunk flag = 0x00` instead of `0x01`).
 
-#### 7.4.3 Nonce Derivation
+> **Future-version domain separation.** Each new PNA AEAD framework version MUST allocate a new FHED `Cipher mode` value (e.g., a hypothetical PNA AEAD v2 would use `Cipher mode = 3`, not reuse `2`). The 1-byte `Cipher mode` field in the AAD then provides natural inter-version domain separation without a magic prefix.
 
-The 96-bit nonce for each FDAT or SDAT chunk MUST be constructed deterministically as follows:
+#### 7.4.3 Nonce Generation
 
-```
-nonce[0..8]   = AENC[cipher_mode_id=2].archive_identifier[0..8]   (per-archive, 8 bytes)
-nonce[8..12]  = chunk_index                                       (u32 big-endian, per-entry counter)
-```
+The 96-bit nonce for each FDAT or SDAT chunk MUST be generated by a cryptographically secure pseudorandom number generator (CSPRNG) per NIST SP 800-38D §8.2.2 (RBG-based construction). The encoder MUST generate a fresh 12-byte nonce for every chunk and store it inline as the first 12 bytes of the chunk's data field (see [§7.5](#75-nonce-and-tag-placement-for-aead-modes)).
 
-The `chunk_index` starts at 0 for the first FDAT (or SDAT) chunk of each entry and increments by 1 for each subsequent chunk in the same entry. Indices are NOT shared across entries.
-
-> **Note.** The high-order 8 bytes of `archive_identifier` are reused as the nonce prefix; the low-order 8 bytes serve as additional HKDF input (see [§8.3](../key_derivation_algorithms/index.md#83-hkdf-hmac-based-key-derivation-function)). Splitting the 16-byte `archive_identifier` this way is safe because the per-entry HKDF derivation produces an independent encryption key per entry, so nonce uniqueness only needs to hold within a single (key, nonce) scope, which is guaranteed by `chunk_index`.
+PNA does NOT use deterministic nonce construction (NIST SP 800-38D §8.2.1) in `Cipher mode = 2`; nonce uniqueness is provided by CSPRNG randomness, not by counter state.
 
 #### 7.4.4 Key and Nonce Uniqueness
 
-GCM is catastrophically insecure under nonce reuse with the same key (Joux 2006: a single nonce repetition reveals the GHASH key, enabling unlimited forgeries). PNA enforces nonce uniqueness via two mechanisms:
+GCM is catastrophically insecure under nonce reuse with the same key (Joux 2006: a single nonce repetition reveals the GHASH key, enabling unlimited forgeries). PNA enforces nonce uniqueness via:
 
-1. **Per-entry key derivation.** Each entry uses a key derived from the archive's master key via HKDF-SHA-256, as specified in [§8.3](../key_derivation_algorithms/index.md#83-hkdf-hmac-based-key-derivation-function). The HKDF inputs include both the per-archive `archive_identifier` (from `AENC`) and the per-entry `entry_random` (from `FENC`), so different entries derive different GCM keys even if some other input collides. Cross-entry GCM nonce collisions are therefore neutralized at the key level.
-2. **Monotonic chunk counter within an entry.** Within a single entry, the `chunk_index` is strictly monotonically increasing, guaranteeing nonce uniqueness within (key, nonce) pairs.
+1. **CSPRNG-generated 96-bit nonces (§7.4.3).** The probability of nonce collision under one key after `N` invocations is approximately `N² / 2^97`. NIST SP 800-38D §8.3 limits this to `N ≤ 2^32` (collision probability ≤ 2^-33).
+2. **Bounded invocations per key.** A single PHSF chunk derives one GCM key (from password + salt). All entries sharing the same PHSF chunk share the same key; the cumulative chunk count under that key MUST NOT exceed 2^32. Encoders writing more than 2^32 chunks under one password MUST emit at least one entry with a fresh PHSF salt to start a new key.
 
-Encoders MUST NOT reuse a nonce across distinct invocations under the same per-entry key. Encoders MUST regenerate `AENC.archive_identifier` with a cryptographically secure random number generator for each new archive. Encoders MUST regenerate `FENC.entry_random` for each new entry within an archive.
+Encoders MUST NOT reuse a nonce under the same key. Detecting CSPRNG output collision is generally infeasible for the encoder; the 2^32 invocations cap is the operational mitigation.
 
 #### 7.4.5 Random Number Generation
 
-The cryptographic random fields (`AENC.archive_identifier`, `FENC.entry_random`) MUST be generated using a cryptographically secure pseudorandom number generator (CSPRNG). On systems where the CSPRNG can fail or block (e.g., early-boot Linux without sufficient entropy), encoders MUST surface the failure and abort archive creation rather than silently producing weak random values.
+The 12-byte nonce of each FDAT/SDAT chunk MUST be generated using a cryptographically secure pseudorandom number generator (CSPRNG). On systems where the CSPRNG can fail or block (e.g., early-boot Linux without sufficient entropy), encoders MUST surface the failure and abort archive creation rather than silently producing weak random values.
 
 #### 7.4.6 Authentication Failure Handling
 
@@ -157,34 +146,34 @@ A decoder MAY continue processing subsequent entries in the archive after an aut
 
 ### 7.5. Nonce and Tag Placement for AEAD Modes
 
-When using an AEAD mode (currently GCM, [§7.4](#74-galoiscounter-mode-gcm)), PNA does NOT use the IV-prepend layout described in [§7.3](#73-initialization-vector-iv-placement-in-encrypted-streams). Instead, the nonce is derived deterministically per chunk (§7.4.3) and is NOT stored in the chunk data. The authentication tag is appended to each chunk's ciphertext.
+When using an AEAD mode (currently GCM, [§7.4](#74-galoiscounter-mode-gcm)), PNA does NOT use the IV-prepend layout described in [§7.3](#73-initialization-vector-iv-placement-in-encrypted-streams). Instead, each chunk carries its own random nonce inline (§7.4.3 / §7.4.5) and the authentication tag appended at the end.
 
 #### 7.5.1 FDAT and SDAT Layout under AEAD
 
 Each FDAT (per-entry) or SDAT (solid mode) chunk's data field, when the entry's `Cipher mode` field is 2 (GCM), MUST be laid out as:
 
 ```
-[ciphertext data ...] [16-byte authentication tag]
+[12-byte random nonce] [ciphertext data ...] [16-byte authentication tag]
 ```
 
-The chunk's standard length field counts both the ciphertext and the trailing tag. The tag occupies the final 16 bytes of the chunk's data field, regardless of the chunk's data length.
+The chunk's standard length field counts the nonce, ciphertext, and trailing tag (`12 + len(ciphertext) + 16`). The minimum data field length is therefore 28 bytes (12 nonce + 0 ciphertext + 16 tag); a chunk shorter than 28 bytes is malformed and MUST be rejected by the decoder.
 
-> **Note.** The chunk-level CRC32 (already required for every chunk) covers the entire `(ciphertext || tag)` byte sequence. CRC32 detects transit errors but provides no cryptographic authenticity; the GCM tag is the authoritative integrity check.
+> **Note.** The chunk-level CRC32 (already required for every chunk) covers the entire `(nonce || ciphertext || tag)` byte sequence. CRC32 detects transit errors but provides no cryptographic authenticity; the GCM tag is the authoritative integrity check.
 
 #### 7.5.2 Decoder Behavior
 
 For each FDAT or SDAT chunk in an entry whose `Cipher mode` field is 2 (GCM), a decoder MUST:
 
-1. Read the chunk's data field (length `N` bytes; required `N ≥ 16`).
-2. Treat the last 16 bytes as the authentication tag.
-3. Treat the first `N - 16` bytes as ciphertext.
-4. Reconstruct the AAD as specified in [§7.4.2](#742-associated-data-aad).
-5. Reconstruct the nonce as specified in [§7.4.3](#743-nonce-derivation).
-6. Verify the tag using the cipher algorithm (Rijndael or Camellia) selected by the FHED `Encryption method` field.
+1. Read the chunk's data field (length `N` bytes; required `N ≥ 28`).
+2. Treat the first 12 bytes as the nonce.
+3. Treat the last 16 bytes as the authentication tag.
+4. Treat bytes `[12 .. N-16]` as the ciphertext.
+5. Construct the AAD as specified in [§7.4.2](#742-associated-data-aad).
+6. Verify the tag using the cipher algorithm (Rijndael or Camellia) selected by the FHED `Encryption method` field, with the per-entry GCM key derived from PHSF (see [§4.1.5 PHSF](../chunk_specifications/index.md#415-phsf-password-hash)).
 7. If tag verification succeeds, decrypt the ciphertext to recover plaintext.
 8. If tag verification fails, follow the procedure in [§7.4.6](#746-authentication-failure-handling).
 
-Decoders MUST reject any FDAT or SDAT chunk whose data field is shorter than 16 bytes when the entry uses GCM mode.
+Decoders MUST reject any FDAT or SDAT chunk whose data field is shorter than 28 bytes when the entry uses GCM mode.
 
 #### 7.5.3 Encoder Behavior
 
@@ -192,9 +181,9 @@ For each FDAT or SDAT chunk emitted under GCM mode, an encoder MUST:
 
 1. Determine the chunk's plaintext payload (typically a fixed-size segment such as 64 KiB; see [Recommendations for Encoders](../recommendations_for_encoders/index.md)).
 2. Compute the chunk's AAD as specified in [§7.4.2](#742-associated-data-aad).
-3. Compute the chunk's nonce as specified in [§7.4.3](#743-nonce-derivation).
-4. Encrypt the plaintext under the per-entry GCM key with the computed nonce and AAD, producing a ciphertext of the same length as the plaintext and a 16-byte tag.
-5. Emit a single FDAT (or SDAT) chunk whose data field is the concatenation `(ciphertext || tag)`.
+3. Generate a fresh 12-byte nonce from a CSPRNG (§7.4.5).
+4. Encrypt the plaintext under the per-entry GCM key with the generated nonce and AAD, producing a ciphertext of the same length as the plaintext and a 16-byte tag.
+5. Emit a single FDAT (or SDAT) chunk whose data field is the concatenation `(nonce || ciphertext || tag)`.
 6. For the chunk preceding FEND (or SEND), set the final-chunk flag in the AAD to `0x01`. For all other chunks, the flag MUST be `0x00`.
 
 Encoders SHOULD choose a uniform chunk plaintext size (e.g., 64 KiB or 1 MiB) for an entire entry to simplify decoder buffering. The final chunk of an entry MAY be shorter than the chosen size but MUST NOT be empty unless the entry's plaintext is itself empty.

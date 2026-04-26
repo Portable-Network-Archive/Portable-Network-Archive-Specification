@@ -56,10 +56,6 @@ A. Biryukov University of Luxembourg, D. Dinu University of Luxembourg, D. Khovr
 M. Dworkin, "Recommendation for Block Cipher Modes of Operation: Galois/Counter Mode (GCM) and GMAC", NIST Special Publication 800-38D, November 2007.
 [https://csrc.nist.gov/pubs/sp/800/38/d/final](https://csrc.nist.gov/pubs/sp/800/38/d/final)
 
-### **[RFC-5869]**
-H. Krawczyk and P. Eronen, "HMAC-based Extract-and-Expand Key Derivation Function (HKDF)", RFC 5869, IETF, May 2010.
-[https://datatracker.ietf.org/doc/html/rfc5869](https://datatracker.ietf.org/doc/html/rfc5869)
-
 ### **[RFC-6367]**
 S. Kanno and M. Kanda, "Addition of the Camellia Cipher Suites to Transport Layer Security (TLS)", RFC 6367, NTT Software Corporation / NTT Information Sharing Platform Laboratories, September 2011.
 [https://datatracker.ietf.org/doc/html/rfc6367](https://datatracker.ietf.org/doc/html/rfc6367)
