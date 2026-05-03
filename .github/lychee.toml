@@ -1,0 +1,19 @@
+# lychee link checker configuration
+# Docs: https://lychee.cli.rs/usage/config/
+
+# Per-request limits.
+timeout = 20
+max_redirects = 5
+
+# Retry transient failures and treat rate-limit responses as soft-pass
+# (anonymous CI traffic to documentation hosts often hits 429).
+max_retries = 3              # lychee default, made explicit
+retry_wait_time = 1          # seconds; exponential backoff (1→2→4, ~7s total per link)
+accept = [200, 206, 429]
+
+# Hosts that consistently reject anonymous bot traffic (e.g. 401/403)
+# even though the URLs are valid for human visitors.
+exclude = [
+  "^https://uithub\\.com/",
+  "^https://badge\\.forgithub\\.com/",
+]
