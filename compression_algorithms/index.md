@@ -10,7 +10,7 @@ In this chapter, "PNA compression method N" refers to the **slot index** in the 
 |----------------------------:|:-------------------------------:|:---------------|:----------------------|
 | —                           | 0                               | No compression | —                     |
 | 0                           | 1                               | Deflate        | [§5.1](#51-deflate)   |
-| 1                           | 2                               | ZStandard      | [§5.2](#52-zstandard) |
+| 1                           | 2                               | Zstandard      | [§5.2](#52-zstandard) |
 | 2                           | 4                               | LZMA           | [§5.3](#53-lzma)      |
 
 See also [§4.1.4](../chunk_specifications/index.md#414-fhed-file-header) for the full list of FHED field values.
@@ -45,21 +45,21 @@ Treat all SDAT chunks between SHAD and SEND in the same way.
 
 Additional documentation and portable C code for deflate and inflate are available from the Info-ZIP archives at [ftp://ftp.info-zip.org/pub/infozip/](ftp://ftp.info-zip.org/pub/infozip/).
 
-### 5.2. ZStandard
+### 5.2. Zstandard
 
-PNA compression method 1 specifies ZStandard compression with a [RFC-8878](../references/index.md#rfc-8878). ZStandard compression is an LZ77 derivative used in linux kernel, btrfs, squashfs, and related programs. Reference implementations are BSD license and freely available.
+PNA compression method 1 specifies Zstandard compression with a [RFC-8878](../references/index.md#rfc-8878). Zstandard compression is an LZ77 derivative used in linux kernel, btrfs, squashfs, and related programs. Reference implementations are BSD license and freely available.
 
-For PNA compression method 1, the ZStandard compression method/flags code must specify method code 2 ("ZStandard" compression). Note that the ZStandard compression method number is not the same as PNA compression method number. The additional flags must not specify a preset dictionary. A PNA decoder must be able to decompress any valid ZStandard datastream that satisfies these additional constraints.
+For PNA compression method 1, the Zstandard compression method/flags code must specify method code 2 ("Zstandard" compression). Note that the Zstandard compression method number is not the same as PNA compression method number. The additional flags must not specify a preset dictionary. A PNA decoder must be able to decompress any valid Zstandard datastream that satisfies these additional constraints.
 
-In an entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHED and FEND makes up a ZStandard datastream as specified above. This datastream decompresses to file data as described elsewhere in this document.
+In an entry of PNA file, the concatenation of the contents of all the FDAT chunks between FHED and FEND makes up a Zstandard datastream as specified above. This datastream decompresses to file data as described elsewhere in this document.
 
-It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the ZStandard datastream. There is not necessarily any correlation between FDAT chunk boundaries or any other feature of the ZStandard data. For example, it is entirely possible for the terminating ZStandard check value to be split across FDAT chunks.
+It is important to emphasize that the boundaries between FDAT chunks are arbitrary and can fall anywhere in the Zstandard datastream. There is not necessarily any correlation between FDAT chunk boundaries or any other feature of the Zstandard data. For example, it is entirely possible for the terminating Zstandard check value to be split across FDAT chunks.
 
-In the same vein, there is no required correlation between the structure of the file data or FDAT chunk boundaries. The complete entry data is represented by a single ZStandard datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
+In the same vein, there is no required correlation between the structure of the file data or FDAT chunk boundaries. The complete entry data is represented by a single Zstandard datastream that is stored in some number of FDAT chunks; a decoder that assumes any more than this is incorrect. (Of course, some encoder implementations may emit files in which some of these structures are indeed related. But decoders cannot rely on this.)
 
 Treat all SDAT chunks between SHAD and SEND in the same way.
 
-Additional documentation and Reference implementations of ZStandard are available from GitHub at [https://facebook.github.io/zstd/](https://facebook.github.io/zstd/) and [https://github.com/facebook/zstd](https://github.com/facebook/zstd)
+Additional documentation and Reference implementations of Zstandard are available from GitHub at [https://facebook.github.io/zstd/](https://facebook.github.io/zstd/) and [https://github.com/facebook/zstd](https://github.com/facebook/zstd)
 
 ### 5.3. LZMA
 

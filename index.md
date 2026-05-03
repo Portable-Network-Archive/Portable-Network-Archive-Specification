@@ -6,7 +6,7 @@ This is a PNA 0.0 specification and is subject to change without notice as it is
 
 ## Abstract
 
-This document describes PNA (Portable Network Archive), an extensible file format for the lossless, portable, well-compressed archive of files. PNA can also replace many common uses of zip and tar. Multiple types of compression, including Zstanderd, multiple types of encryption, including AES, and their solid modes, plus optional archive splitting are supported.
+This document describes PNA (Portable Network Archive), an extensible file format for the lossless, portable, well-compressed archive of files. PNA can also replace many common uses of zip and tar. Multiple types of compression, including Zstandard, multiple types of encryption, including AES, and their solid modes, plus optional archive splitting are supported.
 
 PNA is robust, providing both full file integrity checking and simple detection of common transmission errors.
 
@@ -60,7 +60,7 @@ PNA is robust, providing both full file integrity checking and simple detection 
   - [4.4. Additional chunk types](./chunk_specifications/index.md#44-additional-chunk-types)
 - [5. Compression algorithms](./compression_algorithms/index.md)
   - [5.1. Deflate](./compression_algorithms/index.md#51-deflate)
-  - [5.2. ZStandard](./compression_algorithms/index.md#52-zstandard)
+  - [5.2. Zstandard](./compression_algorithms/index.md#52-zstandard)
   - [5.3. LZMA](./compression_algorithms/index.md#53-lzma)
 - [6. Cipher algorithms](./cipher_algorithms/index.md)
   - [6.1. Rijndael](./cipher_algorithms/index.md#61-rijndael)
