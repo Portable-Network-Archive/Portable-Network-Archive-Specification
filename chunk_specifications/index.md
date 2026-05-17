@@ -289,6 +289,8 @@ This chunk appeared after `FHED` chunk and before `FEND` chunk.
 | gname        | n-byte | Unix group name       |
 | permissions  | 2-byte | file permission bytes |
 
+`fPRM` is deprecated; the owner information chunks (§4.2.6) supersede it.
+
 #### 4.2.3 Extended attribute
 
 ##### 4.2.3.1 xATR Extended attribute
@@ -353,6 +355,80 @@ The chunk data consists of zero or more bytes representing the size as a big-end
 - Encoders MAY write `fSIZ` for any entry kind; for entries whose `FHED.Entry kind` is not `0` (regular file), the value has no defined semantics and decoders MUST ignore it.
 - `fSIZ` is informational. The value is a hint only. Decoders MUST NOT rely on it for buffer allocation, memory reservation, or security decisions, and MUST NOT require the reported size to match the actual size of the decompressed and decrypted entry data.
 
+#### 4.2.6 owner information
+
+##### 4.2.6.1 fUId Owner user ID
+
+The owner user ID is recorded.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
+
+| significance |  size  | description |
+|:-------------|:------:|:------------|
+| uid          | 8-byte | user ID     |
+
+##### 4.2.6.2 fGId Owner group ID
+
+The owner group ID is recorded.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
+
+| significance |  size  | description |
+|:-------------|:------:|:------------|
+| gid          | 8-byte | group ID    |
+
+##### 4.2.6.3 fONm Owner user name
+
+The owner user name is recorded.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
+
+| significance |  size  | description     |
+|:-------------|:------:|:----------------|
+| uname length | 1-byte | length of uname |
+| uname        | n-byte | user name       |
+
+##### 4.2.6.4 fGNm Owner group name
+
+The owner group name is recorded.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
+
+| significance |  size  | description     |
+|:-------------|:------:|:----------------|
+| gname length | 1-byte | length of gname |
+| gname        | n-byte | group name      |
+
+##### 4.2.6.5 fOSi Owner SID
+
+The owner security identifier is recorded as its string representation.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
+
+| significance |  size  | description   |
+|:-------------|:------:|:--------------|
+| sid length   | 1-byte | length of sid |
+| sid          | n-byte | SID string    |
+
+##### 4.2.6.6 fGSi Owner group SID
+
+The owner group security identifier is recorded as its string representation.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
+
+| significance |  size  | description   |
+|:-------------|:------:|:--------------|
+| sid length   | 1-byte | length of sid |
+| sid          | n-byte | SID string    |
+
+##### 4.2.6.7 fMOd POSIX permission mode
+
+The POSIX permission mode is recorded.
+This chunk appeared after `FHED` chunk and before `FEND` chunk.
+
+| significance |  size  | description          |
+|:-------------|:------:|:---------------------|
+| mode         | 2-byte | permission mode bits |
+
+##### Constraints
+
+- `fMOd` carries permission bits only (the nine rwx bits and the setuid, setgid, and sticky bits). It does not carry file-type bits; `FHED.Entry kind` is the sole authority for the entry type.
+- Bits other than those above are reserved and MUST be 0. Decoders MUST ignore reserved bits.
+
 ### 4.3. Summary of standard chunks
 
 This table summarizes some properties of the standard chunk types.
@@ -386,6 +462,13 @@ Ancillary chunks
 | xATR  |        Yes          |       Yes         |   Yes    | Between `FHED` and `FEND`                    |
 | fLTP  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
 | fSIZ  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| fUId  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| fGId  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| fONm  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| fGNm  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| fOSi  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| fGSi  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
+| fMOd  |        Yes          |        No         |   Yes    | Between `FHED` and `FEND`                    |
 
 ### 4.4. Additional chunk types
 
