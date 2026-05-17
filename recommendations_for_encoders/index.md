@@ -17,3 +17,7 @@ Keywords in text chunks should be reasonably self-explanatory, since the idea is
 ### 11.2. Private type and method codes
 
 This specification defines the meaning of only some of the possible values of some fields. For example, only compression method 0 through 4, encryption method 0 through 3 and cipher mode 0 through 1 are defined. Numbers greater than 63 must be used when inventing experimental or private definitions of values for any of these fields. Numbers below 64 are reserved for possible future public extensions of this specification. Note that use of private type codes may render a file unreadable by standard decoders. Such codes are strongly discouraged except for experimental purposes, and should not appear in publicly available software or files.
+
+### 11.3. Owner information chunks
+
+An encoder that supports the owner information chunks (§4.2.6) should write those chunks and should not write the deprecated `fPRM` chunk. An encoder should write only the facets it has captured; a facet that was not captured is represented by the absence of its chunk, never by a placeholder value. An encoder should not write `fMOd` for an entry whose POSIX permission mode cannot be faithfully determined.

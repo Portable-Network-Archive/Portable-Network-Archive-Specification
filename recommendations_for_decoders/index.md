@@ -21,3 +21,9 @@ Unexpected values in fields of known chunks (for example, an unexpected compress
 If practical, decoders should have a way to display to the user all text found in the file. Even if the decoder does not recognize a particular text keyword, the user might be able to understand it.
 
 If there are no specific instructions, text is assumed to be represented in UTF-8 without a BOM, but decoders should not rely on this. Decoders should always verify whether the text is UTF-8 encoded, considering the possibility that it might not be.
+
+### 12.3. Owner information chunks
+
+When both `fPRM` and the owner information chunks (§4.2.6) are present, a decoder should prefer the §4.2.6 chunks. When only `fPRM` is present, a decoder may read it as a fallback for archives that predate §4.2.6. A malformed individual facet chunk should be treated as that facet being absent, without failing the entry or affecting the other facets. The absence of a facet means the value was not recorded; a decoder should not substitute a default such as user ID 0, root, or a fixed permission mode.
+
+The owner facets are alternative representations of one identity, and this specification does not define a resolution order among them. A decoder should select a facet according to the target platform and policy. For example, on Windows a decoder may prefer `fOSi`, then `fONm`, then `fUId` only under an explicit numeric-owner option; on POSIX systems it may prefer `fONm`, then `fUId`. The `fONm` and `fGNm` values are opaque strings that may be qualified (for example `user@domain`); resolving any such qualification is left to the decoder's name resolver.
