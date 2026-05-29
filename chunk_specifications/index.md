@@ -122,13 +122,14 @@ The `Compression method`, `Encryption method`, and `Cipher mode` fields in the F
 
 #### 4.1.5. PHSF Password hash
 
-The PHSF chunk provides information about the password hashing algorithm and its parameters used in key derivation for encrypted entries.
+The PHSF chunk provides the password-based key derivation function (KDF) algorithm identifier, parameters, and salt used in key derivation for encrypted entries.
+The chunk name is historical; PHSF does not contain a password hash output or an encryption key.
 This chunk must appeared after `FHED` chunk and before `FDAT` chunk.  
 If the value of the Encryption method field of `FHED` chunk is not 0, this chunk is required.
 
-|  size   | description       |
-|:-------:|:------------------|
-| n-byte  | PHC string format |
+|  size   | description |
+|:-------:|:------------|
+| n-byte  | PHC-compatible KDF parameter string |
 
 About [PHC string format](https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md)
 
