@@ -80,6 +80,7 @@ A widely used key derivation function that applies a pseudorandom function (such
 
 **PHC string format**  
 A standardized string format for encoding password hash parameters and results, as defined by the Password Hashing Competition (PHC). It encodes the algorithm, parameters, salt, and hash in a single string.
+PNA's PHSF chunk uses a PHC-compatible parameter string that contains only the algorithm, parameters, and salt; it omits the hash/output component.
 
 **PNA editor**  
 A program that modifies a PNA file and preserves ancillary information, including chunks that it does not recognize. Such a program must obey the rules given in Chunk Ordering Rules.
