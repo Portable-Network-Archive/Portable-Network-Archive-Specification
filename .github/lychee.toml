@@ -5,10 +5,15 @@
 timeout = 20
 max_redirects = 5
 
+# Present a real browser user agent. Some documentation hosts (e.g. tukaani.org) reset
+# or reject connections from the default lychee/bot agent — especially from cloud CI IP
+# ranges — surfacing as "Connection reset by peer (os error 104)".
+user_agent = "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
+
 # Retry transient failures and treat rate-limit responses as soft-pass
-# (anonymous CI traffic to documentation hosts often hits 429).
-max_retries = 3              # lychee default, made explicit
-retry_wait_time = 1          # seconds; exponential backoff (1→2→4, ~7s total per link)
+# (anonymous CI traffic to documentation hosts often hits 429 or connection resets).
+max_retries = 5
+retry_wait_time = 2          # seconds; exponential backoff (2→4→8→16→32, ~62s total per link)
 accept = [200, 206, 429]
 
 # Hosts that consistently reject anonymous bot traffic (e.g. 401/403)
