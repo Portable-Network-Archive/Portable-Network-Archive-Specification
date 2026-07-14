@@ -336,6 +336,8 @@ Values 64 through 255 are reserved for private extensions.
 
 When `FHED.Entry kind` is `3` (hard link) and the link target type is `2` (directory), the entry represents a **directory hard link** (see Glossary): a hard link whose target is a directory. This is the canonical PNA encoding for directory-target link semantics, and corresponds to platform-native constructs such as Windows NTFS junctions.
 
+The stored link target may be absolute or relative. An absolute target is a platform-native filesystem path (e.g. a Windows drive path) recorded verbatim. A relative target uses `/` as the path separator and is resolved against the directory that contains the link entry itself; unlike a file hard link target, it does not name another archive entry.
+
 On systems that cannot create hard links to directories (e.g., POSIX-compliant file systems that prohibit hardlink-to-directory), implementations MAY fall back to creating a symbolic link to the target directory when extracting such entries. This fallback is a local substitution at extraction time and does not modify the on-wire `FHED.Entry kind` or `fLTP` values.
 
 #### 4.2.5 Raw file size hint

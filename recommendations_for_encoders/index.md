@@ -21,3 +21,7 @@ This specification defines the meaning of only some of the possible values of so
 ### 11.3. Owner information chunks
 
 An encoder that supports the owner information chunks (§4.2.6) should write those chunks and should not write the deprecated `fPRM` chunk. An encoder should write only the facets it has captured; a facet that was not captured is represented by the absence of its chunk, never by a placeholder value. An encoder should not write `fMOd` for an entry whose POSIX permission mode cannot be faithfully determined.
+
+### 11.4. Directory hard link targets
+
+A directory hard link target that resolves inside the tree being archived should be stored as a relative path (resolved against the directory containing the link entry, see the Directory hard link section of [Chunk specifications](../chunk_specifications/index.md)). An absolute target names a location on the machine where the archive was created, so it rarely resolves after extraction elsewhere, and it leaks that machine's directory layout; a relative in-tree target survives extraction into any directory. A target that resolves outside the archived tree should keep its absolute on-disk form.
