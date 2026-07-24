@@ -51,3 +51,11 @@ Alex Biryukov, Daniel Dinu, and Dmitry Khovratovich University of Luxembourg, Lu
 ## **[RFC-9106]**
 A. Biryukov University of Luxembourg, D. Dinu University of Luxembourg, D. Khovratovich ABDK Consulting, S. Josefsson SJD AB, Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications, September 2021.
 [https://tools.ietf.org/html/rfc9106](https://tools.ietf.org/html/rfc9106)
+
+### **[RFC-3713]**
+M. Matsui, J. Nakajima, and S. Moriai, "A Description of the Camellia Encryption Algorithm", RFC 3713, Mitsubishi Electric Corporation / NTT, April 2004.
+[https://datatracker.ietf.org/doc/html/rfc3713](https://datatracker.ietf.org/doc/html/rfc3713)
+
+### **[FIPS-197]**
+National Institute of Standards and Technology, "Advanced Encryption Standard (AES)", Federal Information Processing Standards Publication 197, November 2001 (updated 2023).
+[https://csrc.nist.gov/publications/detail/fips/197/final](https://csrc.nist.gov/publications/detail/fips/197/final)
