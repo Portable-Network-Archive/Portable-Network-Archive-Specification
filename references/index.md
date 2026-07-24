@@ -52,6 +52,22 @@ Alex Biryukov, Daniel Dinu, and Dmitry Khovratovich University of Luxembourg, Lu
 A. Biryukov University of Luxembourg, D. Dinu University of Luxembourg, D. Khovratovich ABDK Consulting, S. Josefsson SJD AB, Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications, September 2021.
 [https://tools.ietf.org/html/rfc9106](https://tools.ietf.org/html/rfc9106)
 
+### **[RFC-5869]**
+H. Krawczyk and P. Eronen, "HMAC-based Extract-and-Expand Key Derivation Function (HKDF)", RFC 5869, May 2010.
+[https://datatracker.ietf.org/doc/html/rfc5869](https://datatracker.ietf.org/doc/html/rfc5869)
+
+### **[HRRV15]**
+V. T. Hoang, R. Reyhanitabar, P. Rogaway, and D. Vizár, "Online Authenticated-Encryption and its Nonce-Reuse Misuse-Resistance", CRYPTO 2015, LNCS 9215, pp. 493-517.
+[https://eprint.iacr.org/2015/189](https://eprint.iacr.org/2015/189)
+
+### **[NIST SP 800-38D]**
+M. Dworkin, "Recommendation for Block Cipher Modes of Operation: Galois/Counter Mode (GCM) and GMAC", NIST Special Publication 800-38D, November 2007.
+[https://csrc.nist.gov/pubs/sp/800/38/d/final](https://csrc.nist.gov/pubs/sp/800/38/d/final)
+
+### **[RFC-6367]**
+S. Kanno and M. Kanda, "Addition of the Camellia Cipher Suites to Transport Layer Security (TLS)", RFC 6367, NTT Software Corporation / NTT Information Sharing Platform Laboratories, September 2011.
+[https://datatracker.ietf.org/doc/html/rfc6367](https://datatracker.ietf.org/doc/html/rfc6367)
+
 ### **[RFC-3713]**
 M. Matsui, J. Nakajima, and S. Moriai, "A Description of the Camellia Encryption Algorithm", RFC 3713, Mitsubishi Electric Corporation / NTT, April 2004.
 [https://datatracker.ietf.org/doc/html/rfc3713](https://datatracker.ietf.org/doc/html/rfc3713)

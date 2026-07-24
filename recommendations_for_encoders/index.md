@@ -16,8 +16,24 @@ Keywords in text chunks should be reasonably self-explanatory, since the idea is
 
 ### 11.2. Private type and method codes
 
-This specification defines the meaning of only some of the possible values of some fields. For example, only compression method 0 through 4, encryption method 0 through 3 and cipher mode 0 through 1 are defined. Numbers greater than 63 must be used when inventing experimental or private definitions of values for any of these fields. Numbers below 64 are reserved for possible future public extensions of this specification. Note that use of private type codes may render a file unreadable by standard decoders. Such codes are strongly discouraged except for experimental purposes, and should not appear in publicly available software or files.
+This specification defines the meaning of only some of the possible values of some fields. For example, only compression method 0 through 4, encryption method 0 through 2 and cipher mode 0 through 2 are defined. Numbers greater than 63 must be used when inventing experimental or private definitions of values for any of these fields. Numbers below 64 are reserved for possible future public extensions of this specification. Note that use of private type codes may render a file unreadable by standard decoders. Such codes are strongly discouraged except for experimental purposes, and should not appear in publicly available software or files.
 
 ### 11.3. Owner information chunks
 
 An encoder that supports the owner information chunks (§4.2.6) should write those chunks and should not write the deprecated `fPRM` chunk. An encoder should write only the facets it has captured; a facet that was not captured is represented by the absence of its chunk, never by a placeholder value. An encoder should not write `fMOd` for an entry whose POSIX permission mode cannot be faithfully determined.
+
+### 11.4. Encryption modes
+
+New encrypted archives should use GCM (`Cipher mode = 2`) rather than CBC or CTR. CBC and CTR provide confidentiality without authenticity; they are primarily useful for compatibility with older archives.
+
+For CBC and CTR, an encoder must follow the IV requirements of [§7.3.3 Encoder Behavior](../cipher_modes/index.md#733-encoder-behavior).
+
+For GCM, an encoder:
+
+1. must generate a fresh KDF salt for each archive. With a reused salt, an encrypted datastream can be transplanted from another archive that shares the same password when the header chunk data and PHSF data are byte-for-byte identical; a fresh salt confines this substitution to within a single archive.
+2. should use Argon2id for new password-protected archives ([§8.2 Argon2](../key_derivation_algorithms/index.md#82-argon2)).
+3. should emit byte-identical PHSF chunks for all AEAD encrypted datastreams in a single archive that share the same password. This allows `K_master` to be computed only once per archive.
+4. must generate a fresh 32-byte `stream_salt` and 7-byte `nonce_prefix` with a CSPRNG for each encrypted datastream, choose a `segment_size` (recommended: 1 MiB), and write the 43-byte stream header ([§7.5.1](../cipher_modes/index.md#751-stream-header)) at the start of the datastream.
+5. must finalize the FHED (or SHED) and PHSF chunk data before encryption begins, construct `entry_context` ([§8.3.1](../key_derivation_algorithms/index.md#831-entry_context)), and derive `K_stream`. These are known before any ciphertext is written, so this does not conflict with one-pass streaming.
+6. must split the plaintext datastream into segments as defined in [§7.5.2](../cipher_modes/index.md#752-segments), buffering one segment ahead so that the final flag is set only on the final segment.
+7. may split the resulting encrypted datastream into FDAT (or SDAT) chunks at arbitrary byte boundaries.
