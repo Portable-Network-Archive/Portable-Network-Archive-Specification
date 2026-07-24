@@ -88,8 +88,14 @@ When this field value is 0, `PHSF` chunk is not required.
 ##### Cipher mode
 
 Cipher mode of encryption.
-0 is cbc mode
-1 is ctr mode
+
+| Value | Mode | Authentication |
+|---|---|---|
+| `0` | CBC | No |
+| `1` | CTR | No |
+| `2` | GCM (AEAD) | Yes |
+
+The encrypted datastream layout for `Cipher mode = 2` (GCM) is defined in [§7.5 AEAD Datastream Layout](../cipher_modes/index.md#75-aead-datastream-layout).
 
 Not interested in the value of this field, if Encryption method field value is 0.
 
@@ -115,6 +121,7 @@ The `Compression method`, `Encryption method`, and `Cipher mode` fields in the F
 |                     | 2     | Camellia              | 256-bit key                | [§6.2](../cipher_algorithms/index.md#62-camellia)                  |
 | Cipher mode         | 0     | CBC                   | Cipher Block Chaining      | [§7.1](../cipher_modes/index.md#71-cipher-block-chaining-mode-cbc) |
 |                     | 1     | CTR                   | Counter Mode               | [§7.2](../cipher_modes/index.md#72-counter-mode-ctr)               |
+|                     | 2     | GCM                   | Galois/Counter Mode (AEAD) | [§7.4](../cipher_modes/index.md#74-galoiscounter-mode-gcm)         |
 
 **Note:**
 - Do not use algorithm-internal method codes (such as zlib's method/flags code) in these fields. Only the PNA method code (integer value) must be stored in the FHED chunk fields.
@@ -134,6 +141,8 @@ If the value of the Encryption method field of `FHED` chunk is not 0, this chunk
 About [PHC string format](https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md)
 
 The PHSF data field stores only public KDF metadata: the KDF algorithm name, its cost parameters, and the salt. Encoders MUST NOT store the derived key, password hash output, Argon2 tag, PBKDF2 output, or any other KDF output in the PHSF chunk. When using a PHC-compatible string representation, the final hash/output component of the PHC string MUST be omitted.
+
+For AEAD encrypted datastreams, the PHSF data field identifies the KDF parameters used to derive the 32-byte master key `K_master` ([§8.3](../key_derivation_algorithms/index.md#83-hkdf-aead-stream-key-derivation)).
 
 ### 4.1.6. FDAT File data
 
@@ -157,6 +166,7 @@ Basic information of Solid mode archive is stored.
 | Encryption method  | 1-byte  | Encryption method  |
 | Cipher mode        | 1-byte  | Cipher mode        |
 
+The encrypted datastream layout for `Cipher mode = 2` (GCM) is defined in [§7.5 AEAD Datastream Layout](../cipher_modes/index.md#75-aead-datastream-layout).
 
 ### 4.1.9. SDAT Solid mode data
 
