@@ -19,7 +19,7 @@ Eight bits; also called an octet.
 A symmetric-key block cipher algorithm developed by NTT and Mitsubishi Electric. Camellia is designed to offer high security and performance comparable to AES, and supports key sizes of 128, 192, and 256 bits. In PNA, Camellia with a 256-bit key and 128-bit block size is used for encryption.
 
 **Cipher mode**  
-A method of using a block cipher to encrypt data, defining how blocks of plaintext are transformed into ciphertext. Common modes include CBC (Cipher Block Chaining) and CTR (Counter mode), each providing different security properties and operational characteristics.
+A method of using a block cipher to encrypt data, defining how plaintext is transformed into ciphertext. Defined modes are CBC (Cipher Block Chaining) and CTR (Counter mode), which provide confidentiality only, and GCM (Galois/Counter Mode), an AEAD (Authenticated Encryption with Associated Data) mode that additionally produces an authentication tag to detect tampering.
 
 **Chunk**  
 A section of a PNA file. Each chunk has a type indicated by its chunk type name. Most types of chunks also include some data. The format and meaning of the data within the chunk are determined by the type name.
