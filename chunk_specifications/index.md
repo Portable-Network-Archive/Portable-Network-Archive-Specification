@@ -133,6 +133,8 @@ If the value of the Encryption method field of `FHED` chunk is not 0, this chunk
 
 About [PHC string format](https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md)
 
+The PHSF data field stores only public KDF metadata: the KDF algorithm name, its cost parameters, and the salt. Encoders MUST NOT store the derived key, password hash output, Argon2 tag, PBKDF2 output, or any other KDF output in the PHSF chunk. When using a PHC-compatible string representation, the final hash/output component of the PHC string MUST be omitted.
+
 ### 4.1.6. FDAT File data
 
 The actual data of the file is recorded.
