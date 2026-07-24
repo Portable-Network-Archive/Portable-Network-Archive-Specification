@@ -91,7 +91,7 @@ Cipher mode of encryption.
 0 is cbc mode
 1 is ctr mode
 
-Not interested in the value of this field, if Encryption method filed value is 0.
+Not interested in the value of this field, if Encryption method field value is 0.
 
 ##### File path
 
