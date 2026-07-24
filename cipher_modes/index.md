@@ -22,7 +22,7 @@ CTR mode is a stream cipher mode of operation, where each plaintext block is enc
 
 This document specifies the use of the Rijndael or Camellia cipher in CTR mode within PNA.
 
-CTR requires the encryptor to generate a unique per-packet value and communicate this value to the decryptor. This specification calls this per-packet value an initialization vector (IV).  The same IV and key combination MUST NOT be used more than once. The encryptor can generate the IV in any manner that ensures uniqueness. Common approaches to IV generation include incrementing a counter for each packet.
+CTR requires the encryptor to generate a unique per-packet value and communicate this value to the decryptor. This specification calls this per-packet value an initialization vector (IV). The same IV and key combination MUST NOT be used more than once. The encryptor can generate the IV in any manner that ensures uniqueness. Common approaches to IV generation include incrementing a counter for each packet.
 
 More information on CTR mode can be obtained in [MODES](../references/index.md#modes)
 
