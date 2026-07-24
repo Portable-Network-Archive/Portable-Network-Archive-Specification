@@ -25,7 +25,7 @@ It may be changed when there is a change in the type of chunks that make up PNA.
 
 ##### General purpose bit flag
 
-__Bit0__ ~ __Bit15__ currently does not used. reserve for the future.
+__Bit 0__ ~ __Bit 15__: currently not used. Reserved for future use. Encoders MUST set these bits to `0`. Decoders MUST ignore the values of these bits when reading; future specification revisions may assign meanings.
 
 ##### Archive number
 
