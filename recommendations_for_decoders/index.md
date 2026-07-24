@@ -27,3 +27,21 @@ If there are no specific instructions, text is assumed to be represented in UTF-
 When both `fPRM` and the owner information chunks (§4.2.6) are present, a decoder should prefer the §4.2.6 chunks. When only `fPRM` is present, a decoder may read it as a fallback for archives that predate §4.2.6. A malformed individual facet chunk should be treated as that facet being absent, without failing the entry or affecting the other facets. The absence of a facet means the value was not recorded; a decoder should not substitute a default such as user ID 0, root, or a fixed permission mode.
 
 The owner facets are alternative representations of one identity, and this specification does not define a resolution order among them. A decoder should select a facet according to the target platform and policy. For example, on Windows a decoder may prefer `fOSi`, then `fONm`, then `fUId` only under an explicit numeric-owner option; on POSIX systems it may prefer `fONm`, then `fUId`. The `fONm` and `fGNm` values are opaque strings that may be qualified (for example `user@domain`); resolving any such qualification is left to the decoder's name resolver.
+
+### 12.4. AEAD-specific decoder behavior
+
+A decoder processes an encrypted datastream with `Cipher mode = 2` (GCM, [§7.4](../cipher_modes/index.md#74-galoiscounter-mode-gcm)) according to [§7.5](../cipher_modes/index.md#75-aead-datastream-layout).
+
+1. Read the first 75 bytes of the datastream as the stream header. If `segment_size` is 0 or exceeds 67,108,864 (64 MiB), the datastream must be treated as **malformed**.
+2. Verify `key_confirmation` ([§8.3.2](../key_derivation_algorithms/index.md#832-key_confirmation)). A mismatch is a **key mismatch**: the password does not match the KDF parameters recorded for the datastream (tampering with the PHSF chunk or the key_confirmation field itself also presents as a key mismatch). It should be reported distinctly from authentication failures, format errors, and I/O errors. No segment may be processed after a mismatch.
+3. Derive `K_stream` ([§8.3](../key_derivation_algorithms/index.md#83-hkdf-aead-stream-key-derivation)) and read segments in order. Until a segment's tag verification succeeds, its plaintext must not be passed to any upper layer, including decompression.
+4. Whether a segment is final must be determined before verification, because it selects the final flag of the nonce. The decoder reads one segment ahead and treats a segment as final only when no datastream bytes follow it.
+5. A tag verification failure is an **authentication failure**: the datastream has been tampered with or corrupted. It should be reported distinctly from key mismatches, format errors, and I/O errors. No further segments may be processed.
+6. If bytes remain in the datastream after successful verification of a segment with final flag `0x01`, the datastream must be treated as **malformed**.
+7. If the datastream is exhausted before a final segment verifies successfully, this is a **truncation error**. The entry as a whole must be reported as incomplete, even if previously verified plaintext has already been released to upper layers. If the datastream ends with fewer than 16 bytes remaining and no segment has been verified yet, the datastream contains no complete segment and decoders should report it as **malformed** (equivalent to a total length below the 91-byte minimum). If at least one segment has already been verified, decoders should report **truncation**.
+
+#### 12.4.1 Unauthenticated metadata
+
+In per-entry mode, ancillary chunks are neither encrypted nor authenticated. A decoder should not, by default, apply setuid/setgid bits, capabilities, or ACLs taken from unauthenticated ancillary chunks.
+
+For use cases that require confidentiality and authenticity of metadata, solid mode is appropriate: in solid mode the whole entry is serialized inside the SDAT stream and is therefore encrypted and authenticated.
