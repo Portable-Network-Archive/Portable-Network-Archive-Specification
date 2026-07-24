@@ -5,7 +5,7 @@ PNA employs multiple cipher modes of operation. This specification is designed t
 ### 7.1. Cipher Block Chaining Mode (CBC)
 PNA cipher mode of operation method 0 specifies CBC with a block length of 128 bits.
 
-CBC mode is a block cipher mode of operation that provides confidentiality and integrity through chaining encrypted blocks. In CBC mode, each plaintext block is XORed with the previous ciphertext block before encryption. It introduces a dependency between blocks, making it suitable for scenarios where each block's integrity relies on the preceding block.
+CBC mode is a block cipher mode of operation that provides confidentiality through chaining encrypted blocks. In CBC mode, each plaintext block is XORed with the previous ciphertext block before encryption. It introduces a dependency between blocks.
 
 This document specifies the use of the Rijndael or Camellia cipher in CBC mode within PNA.
 
