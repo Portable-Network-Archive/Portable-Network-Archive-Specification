@@ -2,7 +2,7 @@
 
 ## Status
 
-Work in progress for the PNA 0.0 specification. The chunk type and format IDs below are proposed allocations, not registered assignments. The common structure, POSIX.1e, extended NFSv4 family, and Darwin layouts record the current design decisions. The Windows NT payload is incomplete; the Darwin layout and other draft formats require further validation and must not be treated as finalized wire formats. Open questions and validation work are listed separately at the end.
+Work in progress for the PNA 0.0 specification. The chunk type and format IDs below are proposed allocations, not registered assignments. The common structure, POSIX.1e, extended NFSv4 family, and Darwin layouts record the current design decisions. The Windows NT layout is provisional; all draft formats require further validation and must not be treated as finalized wire formats. Open questions and validation work are listed separately at the end.
 
 This draft specifies the on-wire representation and its meaning, not how an implementation obtains ACLs, resolves principals, converts security models, or restores metadata on a filesystem.
 
@@ -40,7 +40,7 @@ A Format ID identifies both an ACL model and an encoding of that model. An incom
 | `0x0000` | Reserved (invalid Format ID) | Agreed |
 | `0x0001` | POSIX.1e ACL v1 | Layout agreed |
 | `0x0002` | PNA Extended NFSv4 ACL v1 | Layout agreed; mapping requires validation |
-| `0x0003` | Windows NT ACL v1 | Proposed allocation; payload incomplete |
+| `0x0003` | Windows NT ACL v1 | Provisional layout; coverage details require validation |
 | `0x0004` | Darwin ACL v1 | Layout agreed; field details and mapping require validation |
 | `0x0005` | PNA Extended NFSv4.1 ACL v1 | Layout agreed; mapping requires validation |
 | `0x0006`–`0x7FFF` | Reserved for future public formats | Proposed range |
@@ -215,11 +215,59 @@ DACL contains ALLOW/DENY ACEs; SACL contains AUDIT/ALARM ACEs. Their sequence an
 
 Ordinary access permissions are described by the combined NFSv4 ACL or by the NFSv4.1 DACL when present. A SACL alone describes auditing/alarm rules and does not supersede ordinary permissions. The special POSIX mode bits remain separate `fMOd` information. No POSIX.1e-specific one-to-one relationship between ACEs and ordinary mode bits is imposed on either NFSv4 format. Inconsistency is not a structural violation of the ACL payload. See RFC 8881 §6.3–6.4 for the model's mode interaction.
 
-## 5. Windows NT ACL v1 (`0x0003`) — incomplete
+## 5. Windows NT ACL v1 (`0x0003`) — provisional layout
 
-The agreed direction is to use the Microsoft self-relative security descriptor as the basis for the payload, with owner/group identities stored separately in existing PNA owner facets. Owner and Group SID offsets can be zero in the external representation; the Windows API permits selecting security information components independently. See [MS-DTYP Security Descriptor](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/7d4dac05-9cef-4563-a058-f108abecce1d) and [GetSecurityInfo](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-getsecurityinfo).
+This format uses a Microsoft self-relative security descriptor to record DACL and SACL information without embedding the file's owner and primary group identities. It is not intended to preserve the entire original security descriptor byte for byte.
 
-The design must distinguish unrecorded DACL/SACL information from recorded absent, NULL, or empty ACL states, and retain relevant descriptor control flags and ordered ACE data. Retaining the descriptor's native little-endian encoding is the proposed approach. The current candidate layout is a component-capture indicator followed by the descriptor bytes; the indicator's width and bit allocations are not finalized. SACL subcomponents, capture scope, descriptor normalization, and control-flag coverage remain open. Owner/group fields are planned to be omitted from the stored descriptor; this is not a claim to preserve an entire original security descriptor byte for byte. The format must not yet be emitted as an interoperable public encoding.
+### 5.1. Payload
+
+| Field | Type | Description |
+|:------|:-----|:------------|
+| coverage | u32 | Recorded security-information scope, in network byte order |
+| security_descriptor | bytes | Native self-relative security descriptor, in its original external encoding |
+
+The descriptor is based on the [MS-DTYP security descriptor](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/7d4dac05-9cef-4563-a058-f108abecce1d) and the Windows self-relative representation. Its offsets are relative to the beginning of the descriptor, not the coverage field or the chunk. The native representation is little-endian except for fields with separately defined encodings (e.g. SID identifier authorities).
+
+The Owner and Group offsets are zero; those identities are not stored in this payload. Owner facets in PNA are independent. Applicable descriptor control flags and native ordered ACE data are retained. The precise validation profile for owner/group omission, NULL ACLs and control flags must be reconciled with the documented Windows API and protocol representations before this format is finalized.
+
+### 5.2. Coverage
+
+The agreed direction allows a partial record. Coverage describes recorded information, not the API flags or method used to obtain it. A missing ACE alone does not establish whether an ACE was absent at the source or was outside the captured scope.
+
+Proposed bit assignments (not yet frozen):
+
+| Bit | Recorded component |
+|:----|:-------------------|
+| 0 | Complete DACL |
+| 1 | Complete SACL |
+| 2 | Mandatory integrity label |
+| 3 | Resource attributes |
+| 4 | Scoped policy identifiers |
+| 5 | Process trust labels |
+| 6 | Access filter ACEs |
+| 7 | Audit ACEs |
+| 8–31 | Reserved |
+
+Complete SACL coverage means the entire SACL, including ACE kinds outside the individually listed categories. A partial record does not imply that the complete SACL is known. A successful query using a similarly named Windows flag is not by itself proof of PNA complete coverage: for example, [MS-FSA §2.1.5.14](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fsa/0a9f223c-b258-4f61-8b59-92f970341400) distinguishes SACL and label requests.
+
+### 5.3. Recorded ACL states
+
+For each fully covered ACL, the intended interpretation is:
+
+| Covered | PRESENT bit | ACL offset | Meaning |
+|:--------|:------------|:-----------|:--------|
+| No | n/a | n/a | Entire ACL not recorded; partial coverage may exist |
+| Yes | 0 | 0 | ACL absent |
+| Yes | 1 | 0 | NULL ACL |
+| Yes | 1 | nonzero | Present ACL (empty if its ACE count is zero) |
+
+The absent and NULL representations must remain distinct; in particular a NULL DACL and an empty DACL have different access-check semantics. A partial SACL is not sufficient to infer complete SACL absence, NULL status, or emptiness. The exact descriptor validity and coverage/control-field combinations, including canonical values for unrecorded components, remain to be specified.
+
+### 5.4. Native ACEs and semantics
+
+DACL ACEs record discretionary access rules. SACL ACEs include auditing, integrity labels and other system security information; a SACL is not an audit log. Preserve the native ACL and ACE formats, SID representations, ACE order, object GUIDs, application/callback data, and applicable inheritance information. Do not translate the payload into another ACL model or append separate principal names. Unknown ACE data can be retained opaquely where its boundaries can be validated; this does not imply that the ACE can be interpreted or applied.
+
+The native descriptor representation, coverage scope, individual SACL category definitions, control-bit semantics, and native round-trip require validation before the public wire format is frozen.
 
 ## 6. Darwin ACL v1 (`0x0004`)
 
@@ -316,10 +364,10 @@ The following work remains before freezing public format assignments or merging 
 - **Common/registry:** confirm the proposed public chunk name, Format ID allocation, precise treatment of duplicate chunks and unknown supported-format values, and editor semantics for unknown private IDs. Verify final terminology against the existing chunk rules.
 - **POSIX.1e:** confirm directory-specific default-ACL validity versus contextual handling; verify byte-level test vectors, qualifier widths and all structural invariants against native APIs. Verify mode/ACL round-trip without promoting encoder recommendations into validation requirements.
 - **NFSv4 family:** validate that the local FreeBSD/UFS/OpenZFS ACL APIs map without semantic loss to the extended representation, including inherited flags, identity facets, and permissions. Confirm behavior of unknown ACE types/special identifiers and reserved presence bits. Recheck all referenced RFC clauses and extensions; the PNA representation intentionally differs from standard NFS wire attributes. Validate empty ACL and all component-presence combinations. Do not infer that a particular native API captures DACL/SACL just because the model can represent them.
-- **Windows NT:** independently verify owner/group-free self-relative descriptors with the documented APIs, descriptor validation, round-trip and applicable control flags; specify the capture indicator, SACL/LABEL and other security-information coverage, partial acquisition, absent vs NULL vs empty, and restoration of inherited information. Owner/group defaulted flags and the limits of the existing owner facets need explicit decisions. Do not claim a successful native round-trip until tested.
+- **Windows NT:** independently verify owner/group-free self-relative descriptors with the documented APIs, descriptor validation, round-trip and applicable control flags; finalize coverage bit assignments and combinations, SACL/LABEL and other security-information category boundaries, partial acquisition, descriptor validity for absent vs NULL vs empty, and restoration of inherited information. Owner/group defaulted flags and the limits of the existing owner facets need explicit decisions. Do not claim a successful native round-trip until tested.
 - **Darwin:** finalize the proposed presence-indicator values, numeric IDs with unknown principal kind, and flags in the no-ACL sentinel case. Freeze the native rights/flag values and unknown-kind/bit rules; validate UUID facets, empty vs absent vs unavailable ACLs, filesystem-private flags, native ACL APIs, inheritance metadata, and round-trip fixtures. Dedicated owner/group UUID chunks are deliberately deferred to a separate design.
 - **Entry kinds and overlapping metadata:** clarify conflicting ACLs on hard-link entries, directory-target links, semantics of `FHED.Entry kind = 4`, symlink restoration, and conflicts with ACL information in `xATR`, AppleDouble or legacy private chunks. Do not add an implicit dependency on other ancillary chunks.
-- **Validation and integration:** add binary fixtures, malformed/truncated input and oversized count tests, unknown-format preservation and editor tests, native round-trip tests, and integration with the specification's section 4.3 table, table of contents, encoder/decoder recommendations, and references. The Windows format remains incomplete and the Darwin layout requires further validation; no code or tests have been executed by this draft.
+- **Validation and integration:** add binary fixtures, malformed/truncated input and oversized count tests, unknown-format preservation and editor tests, native round-trip tests, and integration with the specification's section 4.3 table, table of contents, encoder/decoder recommendations, and references. The Windows and Darwin layouts require further validation; no code or tests have been executed by this draft.
 
 ## References
 
@@ -336,3 +384,5 @@ The following work remains before freezing public format assignments or merging 
 
 - [Apple XNU, kauth.h](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/kauth.h) (informative; version-fixed mapping pending)
 - [Apple Libc, acl_translate.c](https://github.com/apple-oss-distributions/Libc/blob/main/posix1e/acl_translate.c) (informative)
+- [Microsoft SECURITY_INFORMATION](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-information)
+- [Microsoft MS-FSA §2.1.5.14](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fsa/0a9f223c-b258-4f61-8b59-92f970341400)
