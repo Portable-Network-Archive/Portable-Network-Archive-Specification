@@ -2,7 +2,7 @@
 
 ## Status
 
-Work in progress for the PNA 0.0 specification. The chunk type and format IDs below are proposed allocations, not registered assignments. The common structure and POSIX.1e and extended NFSv4 family layouts record the current design decisions. The Windows NT and Darwin formats are incomplete and must not be treated as finalized wire formats. Open questions and validation work are listed separately at the end.
+Work in progress for the PNA 0.0 specification. The chunk type and format IDs below are proposed allocations, not registered assignments. The common structure, POSIX.1e, extended NFSv4 family, and Darwin layouts record the current design decisions. The Windows NT payload is incomplete; the Darwin layout and other draft formats require further validation and must not be treated as finalized wire formats. Open questions and validation work are listed separately at the end.
 
 This draft specifies the on-wire representation and its meaning, not how an implementation obtains ACLs, resolves principals, converts security models, or restores metadata on a filesystem.
 
@@ -41,7 +41,7 @@ A Format ID identifies both an ACL model and an encoding of that model. An incom
 | `0x0001` | POSIX.1e ACL v1 | Layout agreed |
 | `0x0002` | PNA Extended NFSv4 ACL v1 | Layout agreed; mapping requires validation |
 | `0x0003` | Windows NT ACL v1 | Proposed allocation; payload incomplete |
-| `0x0004` | Darwin ACL v1 | Proposed allocation; payload not defined |
+| `0x0004` | Darwin ACL v1 | Layout agreed; field details and mapping require validation |
 | `0x0005` | PNA Extended NFSv4.1 ACL v1 | Layout agreed; mapping requires validation |
 | `0x0006`–`0x7FFF` | Reserved for future public formats | Proposed range |
 | `0x8000`–`0xFFFF` | Private formats | Agreed approach |
@@ -221,10 +221,84 @@ The agreed direction is to use the Microsoft self-relative security descriptor a
 
 The design must distinguish unrecorded DACL/SACL information from recorded absent, NULL, or empty ACL states, and retain relevant descriptor control flags and ordered ACE data. Retaining the descriptor's native little-endian encoding is the proposed approach. The current candidate layout is a component-capture indicator followed by the descriptor bytes; the indicator's width and bit allocations are not finalized. SACL subcomponents, capture scope, descriptor normalization, and control-flag coverage remain open. Owner/group fields are planned to be omitted from the stored descriptor; this is not a claim to preserve an entire original security descriptor byte for byte. The format must not yet be emitted as an interoperable public encoding.
 
-## 6. Darwin ACL v1 (`0x0004`) — incomplete
+## 6. Darwin ACL v1 (`0x0004`)
 
-The proposed format is model-specific and will retain native UUID principal identifiers, ordered ACEs, permission masks, and inheritance flags. The encoding, ACL-wide flags, valid values, and any optional principal facets remain to be designed. No binary format is specified here.
+This format extends the Darwin `kauth_acl` and `kauth_ace` representation with additional principal identity facets. It is not the complete native `kauth_filesec` blob. In particular, it does not include the native magic number or the file's owner and group UUIDs. Owner information remains separate; dedicated owner/group UUID chunks are a separate design topic.
 
+### 6.1. Payload
+
+All multibyte integers use network byte order. Fields are serialized consecutively without implicit alignment or padding.
+
+| Field | Type | Description |
+|:------|:-----|:------------|
+| ace_count | u32 | Number of ACEs, or `0xFFFFFFFF` (no ACL) |
+| acl_flags | u32 | ACL-wide flags |
+| aces | DarwinAce[] | Ordered ACE records; omitted when ace_count is `0xFFFFFFFF` |
+
+The representation distinguishes three cases:
+
+- Absence of the `aCLS` chunk: ACL information was not recorded.
+- `ace_count = 0xFFFFFFFF`: absence of an ACL is explicitly recorded.
+- Any other count: an ACL is recorded, including an empty ACL when the count is zero.
+
+The sentinel is based on the Darwin `KAUTH_FILESEC_NOACL` constant. For the draft, the fixed header is retained even when the sentinel is used; the ACL flags carry no defined ACL semantics in that case. The exact sentinel/flags validity rule remains to be confirmed. The sentinel is never interpreted as an array length. A known payload must contain exactly the records indicated by its count, with no trailing data.
+
+### 6.2. ACE representation
+
+| Field | Type | Description |
+|:------|:-----|:------------|
+| uuid | 16 bytes | Principal UUID in native external byte order |
+| flags | u32 | ACE kind and flags |
+| access_mask | u32 | Darwin vnode access rights |
+| principal_kind | u8 | Principal kind |
+| id_present | u8 | Numeric ID presence indicator |
+| numeric_id | u64 (conditional) | Numeric UID or GID, present only when indicated |
+| name_length | u16 | Length in bytes of the optional name |
+| name | name_length bytes | UTF-8 name; zero length denotes no name |
+
+The leading UUID, flags, and access mask correspond to the native external ACE representation. The remaining fields are PNA extensions. ACE order is meaningful and is retained.
+
+Principal kinds:
+
+| Value | Meaning |
+|:------|:--------|
+| 0 | Unknown |
+| 1 | User |
+| 2 | Group |
+
+The proposed encoding for `id_present` is 0 (absent) or 1 (present). The UUID is required; the numeric ID and name are optional. A numeric ID for a known user or group is a UID or GID, respectively. The validity and interpretation of a numeric ID with unknown principal kind remain to be decided. Other principal kinds and presence values are not assigned in this draft.
+
+The identity facets describe the same principal. Identity resolution, lookup order, and the choice of facets used when restoring the ACL are not specified. Nonempty names must be valid UTF-8; no normalization is prescribed.
+
+### 6.3. Flags and access rights
+
+The draft uses the bit assignments of Darwin's `kauth_ace` and `kauth_acl` rather than translating them to NFSv4 or POSIX.1e values. The following assignments are documented by XNU.
+
+| ACE flags bits | Meaning |
+|:---------------|:--------|
+| 0–3 | ACE kind: 1 permit, 2 deny; 3 audit and 4 alarm are defined but not implemented by the referenced XNU interface |
+| 4 | Inherited |
+| 5 | File inheritance |
+| 6 | Directory inheritance |
+| 7 | Limited inheritance |
+| 8 | Inherit only |
+| 9–10 | Audit success/failure (defined but not implemented by the referenced XNU interface) |
+
+| ACL flags bits | Meaning |
+|:---------------|:--------|
+| 0–15 | Filesystem-private flags |
+| 16 | Deferred inheritance |
+| 17 | No inheritance |
+
+The access mask follows the Darwin vnode ACL rights assignments. All three flag/mask fields are represented at their full 32-bit width. Filesystem-private bits can be retained without assigning portable meanings to them. The exact version-fixed rights table, reserved-bit semantics, and validity of unknown ACE kinds are pending; the reference to XNU does not automatically assign meaning to future XNU additions.
+
+No platform-specific maximum ACE count is imposed by the draft wire layout beyond the enclosing chunk size and sentinel reservation.
+
+### 6.4. Relation to mode and owner information
+
+Darwin ACLs and POSIX mode bits can participate in the same authorization decision. The ACL does not replace the nine permission bits recorded by `fMOd` in the manner of a POSIX.1e access ACL. Both are independently meaningful. No requirement to derive or validate one from the other is introduced.
+
+File owner and group UUIDs are distinct from ACE principal UUIDs and are outside this payload. Existing owner information chunks remain independent of `aCLS`.
 ## 7. General implementation recommendations (non-normative)
 
 These recommendations are not additional wire-format validity constraints.
@@ -243,9 +317,9 @@ The following work remains before freezing public format assignments or merging 
 - **POSIX.1e:** confirm directory-specific default-ACL validity versus contextual handling; verify byte-level test vectors, qualifier widths and all structural invariants against native APIs. Verify mode/ACL round-trip without promoting encoder recommendations into validation requirements.
 - **NFSv4 family:** validate that the local FreeBSD/UFS/OpenZFS ACL APIs map without semantic loss to the extended representation, including inherited flags, identity facets, and permissions. Confirm behavior of unknown ACE types/special identifiers and reserved presence bits. Recheck all referenced RFC clauses and extensions; the PNA representation intentionally differs from standard NFS wire attributes. Validate empty ACL and all component-presence combinations. Do not infer that a particular native API captures DACL/SACL just because the model can represent them.
 - **Windows NT:** independently verify owner/group-free self-relative descriptors with the documented APIs, descriptor validation, round-trip and applicable control flags; specify the capture indicator, SACL/LABEL and other security-information coverage, partial acquisition, absent vs NULL vs empty, and restoration of inherited information. Owner/group defaulted flags and the limits of the existing owner facets need explicit decisions. Do not claim a successful native round-trip until tested.
-- **Darwin:** design the full payload and validate native ACL APIs and inheritance metadata.
+- **Darwin:** finalize the proposed presence-indicator values, numeric IDs with unknown principal kind, and flags in the no-ACL sentinel case. Freeze the native rights/flag values and unknown-kind/bit rules; validate UUID facets, empty vs absent vs unavailable ACLs, filesystem-private flags, native ACL APIs, inheritance metadata, and round-trip fixtures. Dedicated owner/group UUID chunks are deliberately deferred to a separate design.
 - **Entry kinds and overlapping metadata:** clarify conflicting ACLs on hard-link entries, directory-target links, semantics of `FHED.Entry kind = 4`, symlink restoration, and conflicts with ACL information in `xATR`, AppleDouble or legacy private chunks. Do not add an implicit dependency on other ancillary chunks.
-- **Validation and integration:** add binary fixtures, malformed/truncated input and oversized count tests, unknown-format preservation and editor tests, native round-trip tests, and integration with the specification's section 4.3 table, table of contents, encoder/decoder recommendations, and references. The Windows and Darwin formats are placeholders pending further design; no code or tests have been executed by this draft.
+- **Validation and integration:** add binary fixtures, malformed/truncated input and oversized count tests, unknown-format preservation and editor tests, native round-trip tests, and integration with the specification's section 4.3 table, table of contents, encoder/decoder recommendations, and references. The Windows format remains incomplete and the Darwin layout requires further validation; no code or tests have been executed by this draft.
 
 ## References
 
@@ -259,3 +333,6 @@ The following work remains before freezing public format assignments or merging 
 - [RFC 8881, Network File System (NFS) Version 4 Minor Version 1 Protocol](https://datatracker.ietf.org/doc/html/rfc8881)
 - [Microsoft MS-DTYP, SECURITY_DESCRIPTOR](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/7d4dac05-9cef-4563-a058-f108abecce1d)
 - [Microsoft GetSecurityInfo](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-getsecurityinfo), [SetSecurityInfo](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-setsecurityinfo)
+
+- [Apple XNU, kauth.h](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/kauth.h) (informative; version-fixed mapping pending)
+- [Apple Libc, acl_translate.c](https://github.com/apple-oss-distributions/Libc/blob/main/posix1e/acl_translate.c) (informative)
