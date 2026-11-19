@@ -232,7 +232,7 @@ The Owner and Group offsets are zero; those identities are not stored in this pa
 
 ### 5.2. Coverage
 
-The agreed direction allows a partial record. Coverage describes recorded information, not the API flags or method used to obtain it. A missing ACE alone does not establish whether an ACE was absent at the source or was outside the captured scope.
+The agreed direction permits DACL-only archives as well as records containing both DACL and SACL. Coverage is a statement of which complete ACL components the archived descriptor represents; it is **not** a record of acquisition success, failure, causes, or the API flags used. Such operational details belong to the encoder, not the wire format. In particular, a missing SACL from a DACL-only record does not assert that the source object had no SACL.
 
 Proposed bit assignments (not yet frozen):
 
@@ -240,15 +240,11 @@ Proposed bit assignments (not yet frozen):
 |:----|:-------------------|
 | 0 | Complete DACL |
 | 1 | Complete SACL |
-| 2 | Mandatory integrity label |
-| 3 | Resource attributes |
-| 4 | Scoped policy identifiers |
-| 5 | Process trust labels |
-| 6 | Access filter ACEs |
-| 7 | Audit ACEs |
-| 8–31 | Reserved |
+| 2–31 | Reserved |
 
-Complete SACL coverage means the entire SACL, including ACE kinds outside the individually listed categories. A partial record does not imply that the complete SACL is known. A successful query using a similarly named Windows flag is not by itself proof of PNA complete coverage: for example, [MS-FSA §2.1.5.14](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fsa/0a9f223c-b258-4f61-8b59-92f970341400) distinguishes SACL and label requests.
+At least one ACL component is to be recorded when `aCLS` is present. This permits DACL-only, SACL-only, and DACL-plus-SACL records; whether the symmetric SACL-only case is needed in practice is not a condition on the basic representation. No individual SACL ACE-category coverage bits are defined in this version. If only part of the SACL is available, an encoder must not present it as a complete SACL; it can omit SACL coverage (recording just the DACL if present) or fail according to its own policy. The coverage field's final width (currently drafted as u32) and reserved-bit validity remain open.
+
+A successful query using a similarly named Windows flag is not by itself proof that the entire SACL was captured: for example, [MS-FSA §2.1.5.14](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fsa/0a9f223c-b258-4f61-8b59-92f970341400) distinguishes SACL and label requests. This is an encoder concern, not extra on-wire provenance.
 
 ### 5.3. Recorded ACL states
 
@@ -256,12 +252,12 @@ For each fully covered ACL, the intended interpretation is:
 
 | Covered | PRESENT bit | ACL offset | Meaning |
 |:--------|:------------|:-----------|:--------|
-| No | n/a | n/a | Entire ACL not recorded; partial coverage may exist |
+| No | n/a | n/a | This ACL component is not represented; no claim about source absence |
 | Yes | 0 | 0 | ACL absent |
 | Yes | 1 | 0 | NULL ACL |
 | Yes | 1 | nonzero | Present ACL (empty if its ACE count is zero) |
 
-The absent and NULL representations must remain distinct; in particular a NULL DACL and an empty DACL have different access-check semantics. A partial SACL is not sufficient to infer complete SACL absence, NULL status, or emptiness. The exact descriptor validity and coverage/control-field combinations, including canonical values for unrecorded components, remain to be specified.
+The absent and NULL representations must remain distinct; in particular a NULL DACL and an empty DACL have different access-check semantics. If an ACL component is not covered, its absent-looking descriptor fields do not convey source absence. Conversely, a covered component with its PRESENT bit clear records an absent ACL. The exact descriptor validity and coverage/control-field combinations, including canonical values for components not represented, remain to be specified.
 
 ### 5.4. Native ACEs and semantics
 
@@ -364,7 +360,7 @@ The following work remains before freezing public format assignments or merging 
 - **Common/registry:** confirm the proposed public chunk name, Format ID allocation, precise treatment of duplicate chunks and unknown supported-format values, and editor semantics for unknown private IDs. Verify final terminology against the existing chunk rules.
 - **POSIX.1e:** confirm directory-specific default-ACL validity versus contextual handling; verify byte-level test vectors, qualifier widths and all structural invariants against native APIs. Verify mode/ACL round-trip without promoting encoder recommendations into validation requirements.
 - **NFSv4 family:** validate that the local FreeBSD/UFS/OpenZFS ACL APIs map without semantic loss to the extended representation, including inherited flags, identity facets, and permissions. Confirm behavior of unknown ACE types/special identifiers and reserved presence bits. Recheck all referenced RFC clauses and extensions; the PNA representation intentionally differs from standard NFS wire attributes. Validate empty ACL and all component-presence combinations. Do not infer that a particular native API captures DACL/SACL just because the model can represent them.
-- **Windows NT:** independently verify owner/group-free self-relative descriptors with the documented APIs, descriptor validation, round-trip and applicable control flags; finalize coverage bit assignments and combinations, SACL/LABEL and other security-information category boundaries, partial acquisition, descriptor validity for absent vs NULL vs empty, and restoration of inherited information. Owner/group defaulted flags and the limits of the existing owner facets need explicit decisions. Do not claim a successful native round-trip until tested.
+- **Windows NT:** independently verify owner/group-free self-relative descriptors with the documented APIs, descriptor validation, round-trip and applicable control flags; finalize the minimal two-component coverage encoding, field width and reserved bits, complete-SACL semantics across SACL/LABEL and related security-information categories, descriptor validity for absent vs NULL vs empty, and restoration of inherited information. Owner/group defaulted flags and the limits of the existing owner facets need explicit decisions. Do not claim a successful native round-trip until tested.
 - **Darwin:** finalize the proposed presence-indicator values, numeric IDs with unknown principal kind, and flags in the no-ACL sentinel case. Freeze the native rights/flag values and unknown-kind/bit rules; validate UUID facets, empty vs absent vs unavailable ACLs, filesystem-private flags, native ACL APIs, inheritance metadata, and round-trip fixtures. Dedicated owner/group UUID chunks are deliberately deferred to a separate design.
 - **Entry kinds and overlapping metadata:** clarify conflicting ACLs on hard-link entries, directory-target links, semantics of `FHED.Entry kind = 4`, symlink restoration, and conflicts with ACL information in `xATR`, AppleDouble or legacy private chunks. Do not add an implicit dependency on other ancillary chunks.
 - **Validation and integration:** add binary fixtures, malformed/truncated input and oversized count tests, unknown-format preservation and editor tests, native round-trip tests, and integration with the specification's section 4.3 table, table of contents, encoder/decoder recommendations, and references. The Windows and Darwin layouts require further validation; no code or tests have been executed by this draft.
